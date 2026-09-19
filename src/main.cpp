@@ -71,8 +71,12 @@ void setup() {
 void loop() {
     buttons.update();
 
-    if (buttons.anyPressed()) pet.activity();
+    if (buttons.wasPressed(Button::K3)) {
+        pet.connect();
+    } else if (buttons.anyPressed()) {
+        pet.activity();
+    }
 
-    pet.update();
     animator.update();
+    pet.update();
 }

@@ -9,6 +9,11 @@ void PetManager::begin() {
 }
 
 void PetManager::update() {
+    if (state == PetState::CONNECTING) {
+        if (!animator.isPlaying()) setState(PetState::IDLE);
+        return;
+    }
+
     if (state == PetState::IDLE && millis() - lastActivity >= sleepTimeout) setState(PetState::SLEEP);
 }
 
@@ -33,5 +38,14 @@ void PetManager::setState(PetState newState) {
         case PetState::SLEEP:
             animator.play(ANIMATION_SLEEP, true);
             break;
+        
+        case PetState::CONNECTING:
+            animator.play(ANIMATION_CONNECT, false);
+            break;
     }
+}
+
+void PetManager::connect() {
+    lastActivity = millis();
+    setState(PetState::CONNECTING);
 }

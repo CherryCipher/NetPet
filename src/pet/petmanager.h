@@ -10,7 +10,8 @@
  */
 enum class PetState : uint8_t {
     IDLE,
-    SLEEP
+    SLEEP,
+    CONNECTING
 };
 
 /**
@@ -55,6 +56,11 @@ public:
      * @return Current PetState.
      */
     PetState getState() const;
+
+    /**
+     * @brief Starts the simulated connection sequence.
+     */
+    void connect();
 
 private:
     AnimationManager& animator;

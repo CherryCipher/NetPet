@@ -57,6 +57,13 @@ public:
      */
     bool isPlaying() const;
 
+    /**
+     * @brief Checks whether the current non-looping animation has finished.
+     *
+     * @return true if the animation reached its final frame.
+     */
+    bool isFinished() const;
+
 private:
     static constexpr int FACE_X = 0;
     static constexpr int FACE_Y = 16;
@@ -71,8 +78,5 @@ private:
     unsigned long frameStartedAt = 0;
     bool playing = false;
 
-    /**
-     * @brief Advances the animation to the next frame.
-     */
-    void nextFrame();
+    bool finished = false;
 };

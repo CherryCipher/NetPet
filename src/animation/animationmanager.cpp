@@ -9,12 +9,14 @@ void AnimationManager::play(const Animation& animation, bool restart) {
     currentFrame = 0;
     frameStartedAt = millis();
     playing = true;
+    finished = false;
 
     draw();
 }
 
 void AnimationManager::stop() {
     playing = false;
+    finished = false;
     currentAnimation = nullptr;
     currentFrame = 0;
 }
@@ -27,9 +29,22 @@ void AnimationManager::update() {
 
     if (now - frameStartedAt < frame.duration) return;
 
-    nextFrame();
-    frameStartedAt = now;
-    draw();
+    if (currentFrame + 1 < currentAnimation->frameCount) {
+        currentFrame++;
+        frameStartedAt = now;
+        draw();
+        return;
+    }
+
+    if (currentAnimation->loop) {
+        currentFrame = 0;
+        frameStartedAt = now;
+        draw();
+        return;
+    }
+
+    playing = false;
+    finished = true;
 }
 
 void AnimationManager::draw() {
@@ -51,20 +66,11 @@ void AnimationManager::draw() {
     display.display();
 }
 
-void AnimationManager::nextFrame() {
-    currentFrame++;
-
-    if (currentFrame < currentAnimation->frameCount) return;
-
-    if (currentAnimation->loop) {
-        currentFrame = 0;
-        return;
-    }
-
-    currentFrame = currentAnimation->frameCount - 1;
-    playing = false;
-}
 
 bool AnimationManager::isPlaying() const {
     return playing;
+}
+
+bool AnimationManager::isFinished() const {
+    return finished;
 }

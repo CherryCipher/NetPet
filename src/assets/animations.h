@@ -27,4 +27,23 @@ const Animation ANIMATION_SLEEP = {
     true
 };
 
+const AnimationFrame CONNECT_FRAMES[] = {
+    { FRAME_ETHERNET_00, 500 },
+    { FRAME_ETHERNET_01, 100 },
+    { FRAME_ETHERNET_02, 200 },
+    { FRAME_ETHERNET_03, 500 },
+    { FRAME_ETHERNET_02, 100 },
+    { FRAME_ETHERNET_04, 100 },
+    { FRAME_ETHERNET_05, 100 },
+    { FRAME_ETHERNET_06, 200 },
+    { FRAME_ETHERNET_07, 200 },
+    { FRAME_ETHERNET_08, 1000 }
+};
+
+const Animation ANIMATION_CONNECT = {
+    CONNECT_FRAMES,
+    sizeof(CONNECT_FRAMES) / sizeof(CONNECT_FRAMES[0]),
+    true
+};
+
 
