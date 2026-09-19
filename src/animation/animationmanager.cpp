@@ -10,21 +10,20 @@ void AnimationManager::play(const Animation& animation, bool restart) {
     frameStartedAt = millis();
     playing = true;
     finished = false;
-
-    draw();
 }
 
 void AnimationManager::stop() {
-    playing = false;
-    finished = false;
     currentAnimation = nullptr;
     currentFrame = 0;
+    frameStartedAt = 0;
+    playing = false;
+    finished = false;
 }
 
 void AnimationManager::update() {
     if (!playing || !currentAnimation || currentAnimation->frameCount == 0) return;
 
-    unsigned long now = millis();
+    const unsigned long now = millis();
     const AnimationFrame& frame = currentAnimation->frames[currentFrame];
 
     if (now - frameStartedAt < frame.duration) return;
@@ -32,14 +31,12 @@ void AnimationManager::update() {
     if (currentFrame + 1 < currentAnimation->frameCount) {
         currentFrame++;
         frameStartedAt = now;
-        draw();
         return;
     }
 
     if (currentAnimation->loop) {
         currentFrame = 0;
         frameStartedAt = now;
-        draw();
         return;
     }
 
@@ -47,10 +44,8 @@ void AnimationManager::update() {
     finished = true;
 }
 
-void AnimationManager::draw() {
-    if (!playing || !currentAnimation) return;
-
-    display.fillRect(FACE_X, FACE_Y, FACE_WIDTH, FACE_HEIGHT, SSD1306_BLACK);
+void AnimationManager::draw() const {
+    if (!currentAnimation || currentAnimation->frameCount == 0) return;
 
     const AnimationFrame& frame = currentAnimation->frames[currentFrame];
 
@@ -62,10 +57,7 @@ void AnimationManager::draw() {
         FACE_HEIGHT,
         SSD1306_WHITE
     );
-
-    display.display();
 }
-
 
 bool AnimationManager::isPlaying() const {
     return playing;

@@ -6,6 +6,7 @@
 #include "animation/animationmanager.h"
 #include "input/inputmanager.h"
 #include "pet/petmanager.h"
+#include "screen/screenmanager.h"
 
 constexpr uint8_t SCREEN_WIDTH = 128;
 constexpr uint8_t SCREEN_HEIGHT = 64;
@@ -22,27 +23,12 @@ constexpr uint8_t BTN_K4 = 4;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 AnimationManager animator(display);
-InputManager buttons(BTN_K1, BTN_K2, BTN_K3, BTN_K4);
+InputManager input(BTN_K1, BTN_K2, BTN_K3, BTN_K4);
 PetManager pet(animator);
+ScreenManager screens(display, input, pet, animator);
 
 /**
- * @brief Draws the NetPet status area.
- */
-void drawStatus() {
-    display.fillRect(0, 0, SCREEN_WIDTH, 16, SSD1306_BLACK);
-
-    display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
-
-    display.setCursor(0, 0);
-    display.print("ENERGY: 100%");
-
-    display.setCursor(0, 8);
-    display.print("NO CONNECTIONS...");
-}
-
-/**
- * @brief Initializes NetPet hardware and managers.
+ * @brief Initializes NetPet.
  */
 void setup() {
     Serial.begin(115200);
@@ -54,29 +40,23 @@ void setup() {
         while (true) delay(100);
     }
 
-    buttons.begin();
-
-    display.clearDisplay();
-    drawStatus();
-    display.display();
-
+    input.begin();
     pet.begin();
+    screens.begin();
+
+    screens.render();
 
     Serial.println("NetPet ready");
 }
 
 /**
- * @brief Runs the NetPet application loop.
+ * @brief Runs the NetPet application.
  */
 void loop() {
-    buttons.update();
-
-    if (buttons.wasPressed(Button::K3)) {
-        pet.connect();
-    } else if (buttons.anyPressed()) {
-        pet.activity();
-    }
+    input.update();
 
     animator.update();
     pet.update();
+    screens.update();
+    screens.render();
 }

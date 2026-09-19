@@ -3,64 +3,53 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
 #include "animation.h"
 
 /**
- * @brief Controls non-blocking bitmap animations on the OLED display.
+ * @brief Controls non-blocking bitmap animation playback.
  *
- * The AnimationManager uses millis() for frame timing and therefore does not
- * block the main application loop. Animations are rendered only inside the
- * dedicated face area below the status bar.
+ * AnimationManager manages animation timing and draws the current frame into
+ * the display buffer. It never sends the buffer to the physical display.
  */
 class AnimationManager {
 public:
     /**
      * @brief Creates a new AnimationManager.
      *
-     * @param display Reference to the OLED display used for rendering.
+     * @param display Reference to the OLED display buffer used for rendering.
      */
     explicit AnimationManager(Adafruit_SSD1306& display);
 
     /**
-     * @brief Starts playing an animation.
+     * @brief Starts an animation.
      *
      * @param animation Animation to play.
-     * @param restart Restart the animation if it is already playing.
+     * @param restart Restart the animation when it is already active.
      */
     void play(const Animation& animation, bool restart = false);
 
     /**
-     * @brief Stops the currently playing animation.
+     * @brief Stops the current animation.
      */
     void stop();
 
     /**
-     * @brief Updates the animation state and advances frames when required.
-     *
-     * This method should be called as frequently as possible from loop().
+     * @brief Updates animation timing.
      */
     void update();
 
     /**
-     * @brief Draws the current animation frame to the display.
-     *
-     * This can be used to redraw the current frame after another part of the
-     * application has modified the display buffer.
+     * @brief Draws the current animation frame into the display buffer.
      */
-    void draw();
+    void draw() const;
 
     /**
-     * @brief Checks whether an animation is currently playing.
-     *
-     * @return true if an animation is playing, otherwise false.
+     * @brief Returns whether an animation is currently playing.
      */
     bool isPlaying() const;
 
     /**
-     * @brief Checks whether the current non-looping animation has finished.
-     *
-     * @return true if the animation reached its final frame.
+     * @brief Returns whether a non-looping animation has finished.
      */
     bool isFinished() const;
 
@@ -73,10 +62,9 @@ private:
     Adafruit_SSD1306& display;
 
     const Animation* currentAnimation = nullptr;
-
     uint8_t currentFrame = 0;
     unsigned long frameStartedAt = 0;
-    bool playing = false;
 
+    bool playing = false;
     bool finished = false;
 };

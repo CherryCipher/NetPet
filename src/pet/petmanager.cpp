@@ -1,7 +1,6 @@
 #include "petmanager.h"
 
-PetManager::PetManager(AnimationManager& animator, unsigned long sleepTimeout)
-    : animator(animator), sleepTimeout(sleepTimeout) {}
+PetManager::PetManager(AnimationManager& animator) : animator(animator) {}
 
 void PetManager::begin() {
     lastActivity = millis();
@@ -14,7 +13,7 @@ void PetManager::update() {
         return;
     }
 
-    if (state == PetState::IDLE && millis() - lastActivity >= sleepTimeout) setState(PetState::SLEEP);
+    if (state == PetState::IDLE && millis() - lastActivity >= SLEEP_TIMEOUT) setState(PetState::SLEEP);
 }
 
 void PetManager::activity() {
@@ -23,11 +22,18 @@ void PetManager::activity() {
     if (state == PetState::SLEEP) setState(PetState::IDLE);
 }
 
+void PetManager::connect() {
+    lastActivity = millis();
+    setState(PetState::CONNECTING);
+}
+
 PetState PetManager::getState() const {
     return state;
 }
 
 void PetManager::setState(PetState newState) {
+    if (state == newState && animator.isPlaying()) return;
+
     state = newState;
 
     switch (state) {
@@ -38,14 +44,9 @@ void PetManager::setState(PetState newState) {
         case PetState::SLEEP:
             animator.play(ANIMATION_SLEEP, true);
             break;
-        
+
         case PetState::CONNECTING:
-            animator.play(ANIMATION_CONNECT, false);
+            animator.play(ANIMATION_CONNECT, true);
             break;
     }
-}
-
-void PetManager::connect() {
-    lastActivity = millis();
-    setState(PetState::CONNECTING);
 }

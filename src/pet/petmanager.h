@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-
 #include "../animation/animationmanager.h"
 #include "../assets/animations.h"
 
@@ -15,65 +14,49 @@ enum class PetState : uint8_t {
 };
 
 /**
- * @brief Controls the behavioral state of NetPet.
- *
- * PetManager handles state transitions, user activity and inactivity.
- * It selects the appropriate animation for each pet state while leaving
- * animation playback to AnimationManager.
+ * @brief Controls NetPet behavior and animation selection.
  */
 class PetManager {
 public:
     /**
      * @brief Creates a new PetManager.
      *
-     * @param animator AnimationManager used to display pet animations.
-     * @param sleepTimeout Time without activity before NetPet enters sleep.
+     * @param animator Animation manager used by the pet.
      */
-    PetManager(AnimationManager& animator, unsigned long sleepTimeout = 20000);
+    explicit PetManager(AnimationManager& animator);
 
     /**
-     * @brief Initializes NetPet in the idle state.
+     * @brief Initializes NetPet.
      */
     void begin();
 
     /**
-     * @brief Updates the current pet state.
-     *
-     * This method should be called continuously from loop().
+     * @brief Updates NetPet behavior.
      */
     void update();
 
     /**
-     * @brief Reports user activity to NetPet.
-     *
-     * Activity resets the inactivity timer and wakes NetPet when sleeping.
+     * @brief Reports user activity.
      */
     void activity();
 
     /**
-     * @brief Returns the current pet state.
-     *
-     * @return Current PetState.
-     */
-    PetState getState() const;
-
-    /**
-     * @brief Starts the simulated connection sequence.
+     * @brief Starts the temporary connection animation.
      */
     void connect();
 
+    /**
+     * @brief Returns the current behavioral state.
+     */
+    PetState getState() const;
+
 private:
+    static constexpr unsigned long SLEEP_TIMEOUT = 20000;
+
     AnimationManager& animator;
 
     PetState state = PetState::IDLE;
-
     unsigned long lastActivity = 0;
-    unsigned long sleepTimeout;
 
-    /**
-     * @brief Changes the current pet state.
-     *
-     * @param newState State NetPet should enter.
-     */
     void setState(PetState newState);
 };
