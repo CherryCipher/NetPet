@@ -26,7 +26,7 @@ def make_identifier(filename: str) -> str:
 
 
 def image_to_bitmap(image: Image.Image) -> list[int]:
-    """Convert an image to an Adafruit GFX compatible monochrome bitmap."""
+    """Convert an image to an inverted Adafruit GFX compatible monochrome bitmap."""
     image = image.convert("L")
     bitmap = []
 
@@ -38,7 +38,8 @@ def image_to_bitmap(image: Image.Image) -> list[int]:
                 x = x_start + bit
                 pixel = image.getpixel((x, y))
 
-                if pixel >= THRESHOLD:
+                # Dark PNG pixels become active OLED pixels.
+                if pixel < THRESHOLD:
                     value |= 1 << (7 - bit)
 
             bitmap.append(value)

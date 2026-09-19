@@ -4,7 +4,8 @@
 #include <Adafruit_SSD1306.h>
 
 #include "animation/animationmanager.h"
-#include "assets/animations.h"
+#include "input/inputmanager.h"
+#include "pet/petmanager.h"
 
 constexpr uint8_t SCREEN_WIDTH = 128;
 constexpr uint8_t SCREEN_HEIGHT = 64;
@@ -19,13 +20,13 @@ constexpr uint8_t BTN_K3 = 5;
 constexpr uint8_t BTN_K4 = 4;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
 AnimationManager animator(display);
+InputManager buttons(BTN_K1, BTN_K2, BTN_K3, BTN_K4);
+PetManager pet(animator);
 
 /**
- * @brief Draws the two-line NetPet status area.
- *
- * The status area occupies the top 16 pixels of the display. The remaining
- * 48 pixels are reserved for the animated face.
+ * @brief Draws the NetPet status area.
  */
 void drawStatus() {
     display.fillRect(0, 0, SCREEN_WIDTH, 16, SSD1306_BLACK);
@@ -34,22 +35,17 @@ void drawStatus() {
     display.setTextSize(1);
 
     display.setCursor(0, 0);
-    display.print("FOOD: 100%");
+    display.print("ENERGY: 100%");
 
     display.setCursor(0, 8);
-    display.print("NETPET READY");
+    display.print("NO CONNECTIONS...");
 }
 
 /**
- * @brief Initializes the NetPet hardware and display.
+ * @brief Initializes NetPet hardware and managers.
  */
 void setup() {
     Serial.begin(115200);
-
-    pinMode(BTN_K1, INPUT_PULLUP);
-    pinMode(BTN_K2, INPUT_PULLUP);
-    pinMode(BTN_K3, INPUT_PULLUP);
-    pinMode(BTN_K4, INPUT_PULLUP);
 
     Wire.begin(PIN_SDA, PIN_SCL);
 
@@ -58,12 +54,13 @@ void setup() {
         while (true) delay(100);
     }
 
-    display.clearDisplay();
+    buttons.begin();
 
+    display.clearDisplay();
     drawStatus();
     display.display();
 
-    animator.play(ANIMATION_TEST);
+    pet.begin();
 
     Serial.println("NetPet ready");
 }
@@ -72,5 +69,10 @@ void setup() {
  * @brief Runs the NetPet application loop.
  */
 void loop() {
+    buttons.update();
+
+    if (buttons.anyPressed()) pet.activity();
+
+    pet.update();
     animator.update();
 }

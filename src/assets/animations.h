@@ -3,18 +3,28 @@
 #include "../animation/animation.h"
 #include "frames.h"
 
-/**
- * @brief Frames used by the test animation.
- */
-const AnimationFrame TEST_FRAMES[] = {
-    { FRAME_TESTFRAME, 1000 }
+
+const AnimationFrame IDLE_FRAMES[] = {
+    { FRAME_NORMAL_00, 5000 },
+    { FRAME_NORMAL_01_BLINK, 200 }
 };
 
-/**
- * @brief Test animation used to verify bitmap rendering.
- */
-const Animation ANIMATION_TEST = {
-    TEST_FRAMES,
-    sizeof(TEST_FRAMES) / sizeof(TEST_FRAMES[0]),
+const Animation ANIMATION_IDLE = {
+    IDLE_FRAMES,
+    sizeof(IDLE_FRAMES) / sizeof(IDLE_FRAMES[0]),
     true
 };
+
+
+const AnimationFrame SLEEP_FRAMES[] = {
+    { FRAME_SLEEP_00, 1000 },
+    { FRAME_SLEEP_01, 500 }
+};
+
+const Animation ANIMATION_SLEEP = {
+    SLEEP_FRAMES,
+    sizeof(SLEEP_FRAMES) / sizeof(SLEEP_FRAMES[0]),
+    true
+};
+
+
