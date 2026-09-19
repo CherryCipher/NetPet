@@ -9,9 +9,6 @@
 #include "petdata.h"
 #include "progressionmanager.h"
 
-/**
- * @brief Represents the current behavioral state of NetPet.
- */
 enum class PetState : uint8_t {
     IDLE,
     SLEEP,
@@ -19,9 +16,6 @@ enum class PetState : uint8_t {
     DEAD
 };
 
-/**
- * @brief Controls NetPet behavior, energy and life cycle.
- */
 class PetManager {
 public:
     PetManager(AnimationManager& animator, PetData& data, PetStorage& storage, ProgressionManager& progression);
@@ -37,6 +31,7 @@ public:
     void resumeEnergyDecay();
 
     void setSleepEnabled(bool enabled);
+    void enterPetScreen();
 
     uint8_t getEnergy() const;
     PetState getState() const;

@@ -14,6 +14,9 @@
 
 /**
  * @brief Controls the Wi-Fi food hunting and eating flow.
+ *
+ * Handles scanning, selecting food, eating animations, rewards and
+ * level-up feedback.
  */
 class WiFiScreen {
 public:
@@ -73,11 +76,13 @@ private:
 
     void scan();
     void rebuildNetworkList();
+
     void moveUp();
     void moveDown();
 
     void startEating();
     void finishEating();
+    void startLevelUp();
     void finishFlow();
 
     void drawList();

@@ -87,11 +87,13 @@ void ScreenManager::show(ScreenId screen) {
 
     currentScreen = screen;
 
-    const bool petScreen = currentScreen == ScreenId::PET;
+    if (currentScreen == ScreenId::PET) {
+        pet.enterPetScreen();
+        return;
+    }
 
-    pet.setSleepEnabled(petScreen);
+    pet.setSleepEnabled(false);
 
-    if (petScreen) pet.activity();
     if (currentScreen == ScreenId::WIFI) wifiScreen.begin();
 }
 

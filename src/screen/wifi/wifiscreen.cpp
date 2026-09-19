@@ -31,12 +31,8 @@ bool WiFiScreen::update() {
 
         case State::EAT_RESULT:
             if (millis() - stateStartedAt >= EAT_RESULT_DURATION) {
-                if (newLevel > previousLevel) {
-                    animator.play(ANIMATION_LEVEL_UP, true);
-                    state = State::LEVEL_UP;
-                } else {
-                    finishFlow();
-                }
+                if (newLevel > previousLevel) startLevelUp();
+                else finishFlow();
             }
             return false;
 
@@ -121,11 +117,11 @@ void WiFiScreen::scan() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
 
-    display.setCursor(0, 18);
-    display.print("SEARCHING FOR FOOD...");
+    display.setCursor(4, 20);
+    display.print("SEARCHING FOR FOOD");
 
-    display.setCursor(0, 34);
-    display.print("Scanning Wi-Fi");
+    display.setCursor(32, 38);
+    display.print("PLEASE WAIT");
 
     display.display();
 
@@ -165,7 +161,9 @@ void WiFiScreen::moveUp() {
 
     if (selectedIndex < scrollOffset) scrollOffset = selectedIndex;
 
-    if (selectedIndex >= scrollOffset + MAX_VISIBLE_ITEMS) scrollOffset = selectedIndex - MAX_VISIBLE_ITEMS + 1;
+    if (selectedIndex >= scrollOffset + MAX_VISIBLE_ITEMS) {
+        scrollOffset = selectedIndex - MAX_VISIBLE_ITEMS + 1;
+    }
 }
 
 void WiFiScreen::moveDown() {
@@ -175,7 +173,9 @@ void WiFiScreen::moveDown() {
 
     if (selectedIndex < scrollOffset) scrollOffset = selectedIndex;
 
-    if (selectedIndex >= scrollOffset + MAX_VISIBLE_ITEMS) scrollOffset = selectedIndex - MAX_VISIBLE_ITEMS + 1;
+    if (selectedIndex >= scrollOffset + MAX_VISIBLE_ITEMS) {
+        scrollOffset = selectedIndex - MAX_VISIBLE_ITEMS + 1;
+    }
 }
 
 void WiFiScreen::startEating() {
@@ -193,6 +193,15 @@ void WiFiScreen::startEating() {
 
     newLevel = progression.getLevel();
 
+    Serial.print("WiFi eaten: ");
+    Serial.print(eatenName);
+    Serial.print(" | XP +");
+    Serial.print(eatResult.finalXp);
+    Serial.print(" | Level ");
+    Serial.print(previousLevel);
+    Serial.print(" -> ");
+    Serial.println(newLevel);
+
     animator.play(ANIMATION_EAT, true);
 
     state = State::EATING;
@@ -201,6 +210,17 @@ void WiFiScreen::startEating() {
 void WiFiScreen::finishEating() {
     stateStartedAt = millis();
     state = State::EAT_RESULT;
+}
+
+void WiFiScreen::startLevelUp() {
+    Serial.print("Level up! ");
+    Serial.print(previousLevel);
+    Serial.print(" -> ");
+    Serial.println(newLevel);
+
+    animator.play(ANIMATION_LEVEL_UP, true);
+
+    state = State::LEVEL_UP;
 }
 
 void WiFiScreen::finishFlow() {
@@ -297,21 +317,21 @@ void WiFiScreen::drawEatResult() {
     String name = eatenName;
     if (name.length() > 18) name = name.substring(0, 18);
 
-    display.setCursor(0, 6);
+    display.setCursor(0, 8);
     display.print(name);
     display.print(" EATEN!");
 
-    display.setCursor(0, 28);
+    display.setCursor(0, 30);
     display.print("+");
     display.print(eatResult.energyGained);
     display.print(" E");
 
-    display.setCursor(64, 28);
+    display.setCursor(64, 30);
     display.print("+");
     display.print(eatResult.finalXp);
     display.print(" XP");
 
-    display.setCursor(0, 46);
+    display.setCursor(0, 48);
     display.print("BONUS x");
     display.print(eatResult.multiplier, 2);
 }
@@ -328,13 +348,13 @@ void WiFiScreen::drawLevelUp() {
 
 void WiFiScreen::drawLevelUpResult() {
     display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
 
-    display.setCursor(34, 12);
+    display.setTextSize(1);
+    display.setCursor(34, 10);
     display.print("LEVEL UP!");
 
     display.setTextSize(2);
-    display.setCursor(42, 32);
+    display.setCursor(34, 32);
     display.print("LV ");
     display.print(newLevel);
 }

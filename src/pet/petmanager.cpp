@@ -6,8 +6,10 @@ PetManager::PetManager(AnimationManager& animator, PetData& data, PetStorage& st
 void PetManager::begin() {
     lastActivity = millis();
     lastEnergyDecay = millis();
+
     sleepEnabled = true;
     energyDecayPaused = false;
+
     setState(PetState::IDLE);
 }
 
@@ -73,6 +75,16 @@ void PetManager::setSleepEnabled(bool enabled) {
     lastActivity = millis();
 
     if (!sleepEnabled && state == PetState::SLEEP) setState(PetState::IDLE);
+}
+
+void PetManager::enterPetScreen() {
+    if (state == PetState::DEAD) return;
+
+    sleepEnabled = true;
+    lastActivity = millis();
+
+    state = PetState::IDLE;
+    animator.play(ANIMATION_IDLE, true);
 }
 
 uint8_t PetManager::getEnergy() const {
