@@ -29,8 +29,6 @@ EatResult FoodManager::eatWiFi(const String& bssid, int32_t rssi) {
     progression.addXp(result.finalXp);
     pet.addEnergy(result.energyGained);
 
-    storage.save(data);
-
     return result;
 }
 

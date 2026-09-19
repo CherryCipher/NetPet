@@ -9,6 +9,7 @@
 #include "../pet/petmanager.h"
 #include "../pet/petdata.h"
 #include "../pet/progressionmanager.h"
+#include "wifi/wifiscreen.h"
 
 /**
  * @brief Identifies the available NetPet screens.
@@ -29,50 +30,20 @@ enum class ScreenId : uint8_t {
  */
 class ScreenManager {
 public:
-    /**
-     * @brief Creates a new ScreenManager.
-     *
-     * @param display OLED display used for rendering.
-     * @param input Input manager used for button input.
-     * @param pet Pet manager controlling NetPet behavior.
-     * @param animator Animation manager controlling pet animations.
-     * @param petData Persistent NetPet data.
-     * @param progression Progression manager controlling XP and levels.
-     */
     ScreenManager(
         Adafruit_SSD1306& display,
         InputManager& input,
         PetManager& pet,
         AnimationManager& animator,
         PetData& petData,
-        ProgressionManager& progression
+        ProgressionManager& progression,
+        WiFiScreen& wifiScreen
     );
 
-    /**
-     * @brief Initializes the screen system.
-     */
     void begin();
-
-    /**
-     * @brief Handles input and screen navigation.
-     */
     void update();
-
-    /**
-     * @brief Renders the active screen.
-     */
     void render();
-
-    /**
-     * @brief Activates a screen.
-     *
-     * @param screen Screen to activate.
-     */
     void show(ScreenId screen);
-
-    /**
-     * @brief Returns the active screen.
-     */
     ScreenId getCurrentScreen() const;
 
 private:
@@ -84,18 +55,21 @@ private:
     AnimationManager& animator;
     PetData& petData;
     ProgressionManager& progression;
+    WiFiScreen& wifiScreen;
 
     ScreenId currentScreen = ScreenId::PET;
     uint8_t selectedMenuItem = 0;
 
     void updatePet();
     void updateMenu();
-    void updatePlaceholder();
+    void updateStats();
+    void updateWiFi();
+    void updateBLE();
 
     void drawPet();
     void drawMenu();
     void drawStats();
-    void drawPlaceholder();
+    void drawBLE();
     void drawStatus();
 
     void selectMenuItem();

@@ -6,14 +6,16 @@ ScreenManager::ScreenManager(
     PetManager& pet,
     AnimationManager& animator,
     PetData& petData,
-    ProgressionManager& progression
+    ProgressionManager& progression,
+    WiFiScreen& wifiScreen
 )
     : display(display),
       input(input),
       pet(pet),
       animator(animator),
       petData(petData),
-      progression(progression) {}
+      progression(progression),
+      wifiScreen(wifiScreen) {}
 
 void ScreenManager::begin() {
     currentScreen = ScreenId::PET;
@@ -35,9 +37,15 @@ void ScreenManager::update() {
             break;
 
         case ScreenId::STATS:
+            updateStats();
+            break;
+
         case ScreenId::WIFI:
+            updateWiFi();
+            break;
+
         case ScreenId::BLE:
-            updatePlaceholder();
+            updateBLE();
             break;
     }
 }
@@ -59,8 +67,11 @@ void ScreenManager::render() {
             break;
 
         case ScreenId::WIFI:
+            wifiScreen.draw();
+            break;
+
         case ScreenId::BLE:
-            drawPlaceholder();
+            drawBLE();
             break;
     }
 
@@ -73,6 +84,7 @@ void ScreenManager::show(ScreenId screen) {
     currentScreen = screen;
 
     if (currentScreen == ScreenId::PET) pet.activity();
+    if (currentScreen == ScreenId::WIFI) wifiScreen.begin();
 }
 
 ScreenId ScreenManager::getCurrentScreen() const {
@@ -108,7 +120,15 @@ void ScreenManager::updateMenu() {
     if (input.wasPressed(Button::K4)) show(ScreenId::PET);
 }
 
-void ScreenManager::updatePlaceholder() {
+void ScreenManager::updateStats() {
+    if (input.wasPressed(Button::K4)) show(ScreenId::MENU);
+}
+
+void ScreenManager::updateWiFi() {
+    if (wifiScreen.update()) show(ScreenId::MENU);
+}
+
+void ScreenManager::updateBLE() {
     if (input.wasPressed(Button::K4)) show(ScreenId::MENU);
 }
 
@@ -206,7 +226,6 @@ void ScreenManager::drawStats() {
     if (hours < 10) display.print("0");
     display.print(hours);
     display.print(":");
-
     if (minutes < 10) display.print("0");
     display.print(minutes);
 
@@ -221,24 +240,12 @@ void ScreenManager::drawStats() {
     display.print(petData.bleEaten);
 }
 
-void ScreenManager::drawPlaceholder() {
+void ScreenManager::drawBLE() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
 
     display.setCursor(0, 0);
-
-    switch (currentScreen) {
-        case ScreenId::WIFI:
-            display.print("SCAN WIFI");
-            break;
-
-        case ScreenId::BLE:
-            display.print("SCAN BLE");
-            break;
-
-        default:
-            return;
-    }
+    display.print("SCAN BLE");
 
     display.setCursor(0, 24);
     display.print("COMING SOON");

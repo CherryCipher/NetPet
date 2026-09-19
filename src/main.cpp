@@ -3,12 +3,17 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+#include <logger/logger.h>
+#include <wifi/WiFiManager.h>
+
 #include "animation/animationmanager.h"
 #include "input/inputmanager.h"
+#include "pet/foodmanager.h"
 #include "pet/petdata.h"
 #include "pet/petmanager.h"
 #include "pet/progressionmanager.h"
 #include "screen/screenmanager.h"
+#include "screen/wifi/wifiscreen.h"
 #include "storage/petstorage.h"
 
 constexpr uint8_t SCREEN_WIDTH = 128;
@@ -25,6 +30,9 @@ constexpr uint8_t BTN_K4 = 4;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
+Logger logger;
+WiFiManager wifi(logger);
+
 PetData petData;
 PetStorage petStorage;
 
@@ -32,7 +40,10 @@ AnimationManager animator(display);
 InputManager input(BTN_K1, BTN_K2, BTN_K3, BTN_K4);
 ProgressionManager progression(petData);
 PetManager pet(animator, petData, petStorage, progression);
-ScreenManager screens(display, input, pet, animator, petData, progression);
+FoodManager food(petData, pet, progression, petStorage);
+
+WiFiScreen wifiScreen(display, input, wifi, food);
+ScreenManager screens(display, input, pet, animator, petData, progression, wifiScreen);
 
 /**
  * @brief Initializes NetPet.
@@ -49,8 +60,16 @@ void setup() {
 
     input.begin();
 
+    logger.start();
+    wifi.start();
+
     if (!petStorage.begin()) {
         Serial.println("Pet storage initialization failed!");
+        while (true) delay(100);
+    }
+
+    if (!food.begin()) {
+        Serial.println("Food storage initialization failed!");
         while (true) delay(100);
     }
 
