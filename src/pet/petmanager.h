@@ -24,52 +24,21 @@ enum class PetState : uint8_t {
  */
 class PetManager {
 public:
-    /**
-     * @brief Creates a new PetManager.
-     */
-    PetManager(
-        AnimationManager& animator,
-        PetData& data,
-        PetStorage& storage,
-        ProgressionManager& progression
-    );
+    PetManager(AnimationManager& animator, PetData& data, PetStorage& storage, ProgressionManager& progression);
 
-    /**
-     * @brief Initializes NetPet.
-     */
     void begin();
-
-    /**
-     * @brief Updates NetPet behavior and energy.
-     */
     void update();
-
-    /**
-     * @brief Reports user activity.
-     */
     void activity();
-
-    /**
-     * @brief Starts the connection animation.
-     */
     void connect();
 
-    /**
-     * @brief Adds energy to NetPet.
-     *
-     * @param amount Energy to add.
-     */
     void addEnergy(uint8_t amount);
 
-    /**
-     * @brief Returns the current energy level.
-     */
-    uint8_t getEnergy() const;
+    void pauseEnergyDecay();
+    void resumeEnergyDecay();
 
-    /**
-     * @brief Returns the current behavioral state.
-     */
+    uint8_t getEnergy() const;
     PetState getState() const;
+    bool isEnergyDecayPaused() const;
 
 private:
     AnimationManager& animator;
@@ -81,6 +50,8 @@ private:
 
     unsigned long lastActivity = 0;
     unsigned long lastEnergyDecay = 0;
+
+    bool energyDecayPaused = false;
 
     void updateEnergy();
     void die();

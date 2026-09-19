@@ -58,4 +58,35 @@ const Animation ANIMATION_DEATH = {
     false
 };
 
+const AnimationFrame EAT_FRAMES[] = {
+    { FRAME_EAT_00, 200 },
+    { FRAME_EAT_01, 200 },
+    { FRAME_EAT_02, 200 },
+    { FRAME_EAT_03, 500 },
+    { FRAME_EAT_04, 500 },
+    { FRAME_EAT_03, 500 },
+    { FRAME_EAT_04, 500 },
+    { FRAME_EAT_03, 500 },
+    { FRAME_EAT_04, 500 },
+    { FRAME_EAT_03, 500 },
+    { FRAME_EAT_04, 500 }
+};
+
+const Animation ANIMATION_EAT = {
+    EAT_FRAMES,
+    sizeof(EAT_FRAMES) / sizeof(EAT_FRAMES[0]),
+    false
+};
+
+const AnimationFrame LEVEL_UP_FRAMES[] = {
+    { FRAME_LEVELUP_00, 200 },
+    { FRAME_LEVELUP_01, 200 }
+};
+
+const Animation ANIMATION_LEVEL_UP = {
+    LEVEL_UP_FRAMES,
+    sizeof(LEVEL_UP_FRAMES) / sizeof(LEVEL_UP_FRAMES[0]),
+    false
+};
+
 

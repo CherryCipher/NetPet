@@ -42,7 +42,7 @@ ProgressionManager progression(petData);
 PetManager pet(animator, petData, petStorage, progression);
 FoodManager food(petData, pet, progression, petStorage);
 
-WiFiScreen wifiScreen(display, input, wifi, food);
+WiFiScreen wifiScreen(display, input, wifi, food, pet, progression, animator);
 ScreenManager screens(display, input, pet, animator, petData, progression, wifiScreen);
 
 /**

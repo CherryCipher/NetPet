@@ -1,7 +1,21 @@
 #include "wifiscreen.h"
 
-WiFiScreen::WiFiScreen(Adafruit_SSD1306& display, InputManager& input, WiFiManager& wifi, FoodManager& food)
-    : display(display), input(input), wifi(wifi), food(food) {}
+WiFiScreen::WiFiScreen(
+    Adafruit_SSD1306& display,
+    InputManager& input,
+    WiFiManager& wifi,
+    FoodManager& food,
+    PetManager& pet,
+    ProgressionManager& progression,
+    AnimationManager& animator
+)
+    : display(display),
+      input(input),
+      wifi(wifi),
+      food(food),
+      pet(pet),
+      progression(progression),
+      animator(animator) {}
 
 void WiFiScreen::begin() {
     selectedIndex = 0;
@@ -10,13 +24,35 @@ void WiFiScreen::begin() {
 }
 
 bool WiFiScreen::update() {
-    if (state == State::EAT_RESULT) {
-        if (millis() - resultStartedAt >= RESULT_DURATION) {
-            rebuildNetworkList();
-            return true;
-        }
+    switch (state) {
+        case State::EATING:
+            if (animator.isFinished()) finishEating();
+            return false;
 
-        return false;
+        case State::EAT_RESULT:
+            if (millis() - stateStartedAt >= EAT_RESULT_DURATION) {
+                if (newLevel > previousLevel) {
+                    animator.play(ANIMATION_LEVEL_UP, true);
+                    state = State::LEVEL_UP;
+                } else {
+                    finishFlow();
+                }
+            }
+            return false;
+
+        case State::LEVEL_UP:
+            if (animator.isFinished()) {
+                stateStartedAt = millis();
+                state = State::LEVEL_UP_RESULT;
+            }
+            return false;
+
+        case State::LEVEL_UP_RESULT:
+            if (millis() - stateStartedAt >= LEVEL_RESULT_DURATION) finishFlow();
+            return false;
+
+        default:
+            break;
     }
 
     if (input.wasPressed(Button::K4)) return true;
@@ -37,7 +73,7 @@ bool WiFiScreen::update() {
     }
 
     if (input.wasPressed(Button::K3)) {
-        eatSelected();
+        startEating();
         return false;
     }
 
@@ -58,8 +94,20 @@ void WiFiScreen::draw() {
             drawError();
             break;
 
+        case State::EATING:
+            drawEating();
+            break;
+
         case State::EAT_RESULT:
             drawEatResult();
+            break;
+
+        case State::LEVEL_UP:
+            drawLevelUp();
+            break;
+
+        case State::LEVEL_UP_RESULT:
+            drawLevelUpResult();
             break;
     }
 }
@@ -68,6 +116,18 @@ void WiFiScreen::scan() {
     networkCount = 0;
     selectedIndex = 0;
     scrollOffset = 0;
+
+    display.clearDisplay();
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(0, 18);
+    display.print("SEARCHING FOR FOOD...");
+
+    display.setCursor(0, 34);
+    display.print("Scanning Wi-Fi");
+
+    display.display();
 
     if (!wifi.scanNetworks()) {
         state = State::ERROR;
@@ -105,9 +165,7 @@ void WiFiScreen::moveUp() {
 
     if (selectedIndex < scrollOffset) scrollOffset = selectedIndex;
 
-    if (selectedIndex >= scrollOffset + MAX_VISIBLE_ITEMS) {
-        scrollOffset = selectedIndex - MAX_VISIBLE_ITEMS + 1;
-    }
+    if (selectedIndex >= scrollOffset + MAX_VISIBLE_ITEMS) scrollOffset = selectedIndex - MAX_VISIBLE_ITEMS + 1;
 }
 
 void WiFiScreen::moveDown() {
@@ -117,22 +175,38 @@ void WiFiScreen::moveDown() {
 
     if (selectedIndex < scrollOffset) scrollOffset = selectedIndex;
 
-    if (selectedIndex >= scrollOffset + MAX_VISIBLE_ITEMS) {
-        scrollOffset = selectedIndex - MAX_VISIBLE_ITEMS + 1;
-    }
+    if (selectedIndex >= scrollOffset + MAX_VISIBLE_ITEMS) scrollOffset = selectedIndex - MAX_VISIBLE_ITEMS + 1;
 }
 
-void WiFiScreen::eatSelected() {
+void WiFiScreen::startEating() {
     if (networkCount == 0 || selectedIndex >= networkCount) return;
 
     const WiFiNetwork& network = wifi.getNetwork(networkIndices[selectedIndex]);
 
     eatenName = getDisplayName(network);
-    eatenRssi = network.rssi;
+
+    previousLevel = progression.getLevel();
+
+    pet.pauseEnergyDecay();
+
     eatResult = food.eatWiFi(network.bssid, network.rssi);
 
-    resultStartedAt = millis();
+    newLevel = progression.getLevel();
+
+    animator.play(ANIMATION_EAT, true);
+
+    state = State::EATING;
+}
+
+void WiFiScreen::finishEating() {
+    stateStartedAt = millis();
     state = State::EAT_RESULT;
+}
+
+void WiFiScreen::finishFlow() {
+    pet.resumeEnergyDecay();
+
+    rebuildNetworkList();
 }
 
 void WiFiScreen::drawList() {
@@ -152,17 +226,15 @@ void WiFiScreen::drawList() {
         if (listIndex >= networkCount) break;
 
         const WiFiNetwork& network = wifi.getNetwork(networkIndices[listIndex]);
-        const String name = getDisplayName(network);
+
+        String name = getDisplayName(network);
+        if (name.length() > 12) name = name.substring(0, 12);
 
         display.setCursor(0, 16 + row * 12);
         display.print(listIndex == selectedIndex ? ">" : " ");
 
         display.setCursor(8, 16 + row * 12);
-
-        String shortName = name;
-        if (shortName.length() > 12) shortName = shortName.substring(0, 12);
-
-        display.print(shortName);
+        display.print(name);
 
         display.setCursor(92, 16 + row * 12);
         display.print(network.rssi);
@@ -203,35 +275,68 @@ void WiFiScreen::drawError() {
     display.print("K4 BACK");
 }
 
+void WiFiScreen::drawEating() {
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(0, 0);
+    display.print("EATING ");
+
+    String name = eatenName;
+    if (name.length() > 18) name = name.substring(0, 18);
+
+    display.print(name);
+
+    animator.draw();
+}
+
 void WiFiScreen::drawEatResult() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
 
-    display.setCursor(34, 0);
-    display.print("NOM NOM!");
+    String name = eatenName;
+    if (name.length() > 18) name = name.substring(0, 18);
 
-    display.setCursor(0, 14);
+    display.setCursor(0, 6);
+    display.print(name);
+    display.print(" EATEN!");
 
-    String shortName = eatenName;
-    if (shortName.length() > 20) shortName = shortName.substring(0, 20);
-
-    display.print(shortName);
-
-    display.setCursor(0, 26);
-    display.print("RSSI: ");
-    display.print(eatenRssi);
-    display.print(" dBm");
-
-    display.setCursor(0, 38);
+    display.setCursor(0, 28);
     display.print("+");
     display.print(eatResult.energyGained);
-    display.print(" ENERGY");
+    display.print(" E");
 
-    display.setCursor(0, 50);
+    display.setCursor(64, 28);
     display.print("+");
     display.print(eatResult.finalXp);
-    display.print(" XP  x");
+    display.print(" XP");
+
+    display.setCursor(0, 46);
+    display.print("BONUS x");
     display.print(eatResult.multiplier, 2);
+}
+
+void WiFiScreen::drawLevelUp() {
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(34, 0);
+    display.print("LEVEL UP!");
+
+    animator.draw();
+}
+
+void WiFiScreen::drawLevelUpResult() {
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(34, 12);
+    display.print("LEVEL UP!");
+
+    display.setTextSize(2);
+    display.setCursor(42, 32);
+    display.print("LV ");
+    display.print(newLevel);
 }
 
 String WiFiScreen::getDisplayName(const WiFiNetwork& network) const {

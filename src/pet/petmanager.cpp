@@ -1,15 +1,7 @@
 #include "petmanager.h"
 
-PetManager::PetManager(
-    AnimationManager& animator,
-    PetData& data,
-    PetStorage& storage,
-    ProgressionManager& progression
-)
-    : animator(animator),
-      data(data),
-      storage(storage),
-      progression(progression) {}
+PetManager::PetManager(AnimationManager& animator, PetData& data, PetStorage& storage, ProgressionManager& progression)
+    : animator(animator), data(data), storage(storage), progression(progression) {}
 
 void PetManager::begin() {
     lastActivity = millis();
@@ -57,6 +49,19 @@ void PetManager::addEnergy(uint8_t amount) {
     storage.save(data);
 }
 
+void PetManager::pauseEnergyDecay() {
+    if (energyDecayPaused) return;
+
+    energyDecayPaused = true;
+}
+
+void PetManager::resumeEnergyDecay() {
+    if (!energyDecayPaused) return;
+
+    energyDecayPaused = false;
+    lastEnergyDecay = millis();
+}
+
 uint8_t PetManager::getEnergy() const {
     return data.energy;
 }
@@ -65,7 +70,13 @@ PetState PetManager::getState() const {
     return state;
 }
 
+bool PetManager::isEnergyDecayPaused() const {
+    return energyDecayPaused;
+}
+
 void PetManager::updateEnergy() {
+    if (energyDecayPaused) return;
+
     const unsigned long now = millis();
 
     if (now - lastEnergyDecay < GameConfig::ENERGY_DECAY_INTERVAL) return;
@@ -84,6 +95,8 @@ void PetManager::updateEnergy() {
 void PetManager::die() {
     Serial.println("NetPet died.");
 
+    energyDecayPaused = false;
+
     storage.clear();
     setState(PetState::DEAD);
 }
@@ -92,13 +105,14 @@ void PetManager::resetPet() {
     Serial.println("Creating new NetPet.");
 
     data = PetData();
-
     storage.save(data);
 
     progression.resetSession();
 
     lastActivity = millis();
     lastEnergyDecay = millis();
+
+    energyDecayPaused = false;
 
     setState(PetState::IDLE);
 }

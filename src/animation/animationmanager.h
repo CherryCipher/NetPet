@@ -13,44 +13,14 @@
  */
 class AnimationManager {
 public:
-    /**
-     * @brief Creates a new AnimationManager.
-     *
-     * @param display Reference to the OLED display buffer used for rendering.
-     */
     explicit AnimationManager(Adafruit_SSD1306& display);
 
-    /**
-     * @brief Starts an animation.
-     *
-     * @param animation Animation to play.
-     * @param restart Restart the animation when it is already active.
-     */
     void play(const Animation& animation, bool restart = false);
-
-    /**
-     * @brief Stops the current animation.
-     */
     void stop();
-
-    /**
-     * @brief Updates animation timing.
-     */
     void update();
-
-    /**
-     * @brief Draws the current animation frame into the display buffer.
-     */
     void draw() const;
 
-    /**
-     * @brief Returns whether an animation is currently playing.
-     */
     bool isPlaying() const;
-
-    /**
-     * @brief Returns whether a non-looping animation has finished.
-     */
     bool isFinished() const;
 
 private:
