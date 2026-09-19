@@ -1,7 +1,19 @@
 #include "screenmanager.h"
 
-ScreenManager::ScreenManager(Adafruit_SSD1306& display, InputManager& input, PetManager& pet, AnimationManager& animator)
-    : display(display), input(input), pet(pet), animator(animator) {}
+ScreenManager::ScreenManager(
+    Adafruit_SSD1306& display,
+    InputManager& input,
+    PetManager& pet,
+    AnimationManager& animator,
+    PetData& petData,
+    ProgressionManager& progression
+)
+    : display(display),
+      input(input),
+      pet(pet),
+      animator(animator),
+      petData(petData),
+      progression(progression) {}
 
 void ScreenManager::begin() {
     currentScreen = ScreenId::PET;
@@ -38,6 +50,9 @@ void ScreenManager::render() {
             break;
 
         case ScreenId::STATS:
+            drawStats();
+            break;
+
         case ScreenId::WIFI:
         case ScreenId::BLE:
             drawPlaceholder();
@@ -65,11 +80,6 @@ void ScreenManager::updatePet() {
         show(ScreenId::MENU);
         return;
     }
-
-/*     if (input.wasPressed(Button::K3)) {
-        pet.connect();
-        return;
-    } */
 
     if (input.anyPressed()) pet.activity();
 }
@@ -119,14 +129,28 @@ void ScreenManager::drawPet() {
 }
 
 void ScreenManager::drawStatus() {
+    const unsigned long uptimeMinutes = progression.getUptime() / 60000;
+
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
 
     display.setCursor(0, 0);
-    display.print("ENERGY: 100%");
+    display.print("E:");
+    display.print(petData.energy);
+    display.print("%");
+
+    display.setCursor(58, 0);
+    display.print("LV:");
+    display.print(progression.getLevel());
 
     display.setCursor(0, 8);
-    display.print("LV: 1  UP: 00:00");
+    display.print("UP:");
+    display.print(uptimeMinutes);
+    display.print("m");
+
+    display.setCursor(58, 8);
+    display.print("x");
+    display.print(progression.getUptimeMultiplier(), 2);
 }
 
 void ScreenManager::drawMenu() {
@@ -149,6 +173,49 @@ void ScreenManager::drawMenu() {
     }
 }
 
+void ScreenManager::drawStats() {
+    const unsigned long uptimeSeconds = progression.getUptime() / 1000;
+    const unsigned long hours = uptimeSeconds / 3600;
+    const unsigned long minutes = (uptimeSeconds % 3600) / 60;
+
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(0, 0);
+    display.print("NETPET STATS");
+
+    display.setCursor(0, 12);
+    display.print("LV: ");
+    display.print(progression.getLevel());
+    display.print("  XP: ");
+    display.print(progression.getXp());
+
+    display.setCursor(0, 22);
+    display.print("ENERGY: ");
+    display.print(petData.energy);
+    display.print("%");
+
+    display.setCursor(0, 32);
+    display.print("UPTIME: ");
+
+    if (hours < 10) display.print("0");
+    display.print(hours);
+    display.print(":");
+
+    if (minutes < 10) display.print("0");
+    display.print(minutes);
+
+    display.setCursor(0, 42);
+    display.print("BONUS: x");
+    display.print(progression.getUptimeMultiplier(), 2);
+
+    display.setCursor(0, 52);
+    display.print("WIFI:");
+    display.print(petData.wifiEaten);
+    display.print(" BLE:");
+    display.print(petData.bleEaten);
+}
+
 void ScreenManager::drawPlaceholder() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
@@ -156,10 +223,6 @@ void ScreenManager::drawPlaceholder() {
     display.setCursor(0, 0);
 
     switch (currentScreen) {
-        case ScreenId::STATS:
-            display.print("STATS");
-            break;
-
         case ScreenId::WIFI:
             display.print("SCAN WIFI");
             break;

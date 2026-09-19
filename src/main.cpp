@@ -5,8 +5,11 @@
 
 #include "animation/animationmanager.h"
 #include "input/inputmanager.h"
+#include "pet/petdata.h"
 #include "pet/petmanager.h"
+#include "pet/progressionmanager.h"
 #include "screen/screenmanager.h"
+#include "storage/petstorage.h"
 
 constexpr uint8_t SCREEN_WIDTH = 128;
 constexpr uint8_t SCREEN_HEIGHT = 64;
@@ -22,10 +25,14 @@ constexpr uint8_t BTN_K4 = 4;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
+PetData petData;
+PetStorage petStorage;
+
 AnimationManager animator(display);
 InputManager input(BTN_K1, BTN_K2, BTN_K3, BTN_K4);
-PetManager pet(animator);
-ScreenManager screens(display, input, pet, animator);
+ProgressionManager progression(petData);
+PetManager pet(animator, petData, petStorage);
+ScreenManager screens(display, input, pet, animator, petData, progression);
 
 /**
  * @brief Initializes NetPet.
@@ -41,6 +48,20 @@ void setup() {
     }
 
     input.begin();
+
+    if (!petStorage.begin()) {
+        Serial.println("Pet storage initialization failed!");
+        while (true) delay(100);
+    }
+
+    if (!petStorage.load(petData)) {
+        Serial.println("Creating new NetPet save.");
+        petStorage.save(petData);
+    } else {
+        Serial.println("NetPet save loaded.");
+    }
+
+    progression.begin();
     pet.begin();
     screens.begin();
 
@@ -58,5 +79,6 @@ void loop() {
     animator.update();
     pet.update();
     screens.update();
+
     screens.render();
 }

@@ -3,9 +3,12 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+
 #include "../animation/animationmanager.h"
 #include "../input/inputmanager.h"
 #include "../pet/petmanager.h"
+#include "../pet/petdata.h"
+#include "../pet/progressionmanager.h"
 
 /**
  * @brief Identifies the available NetPet screens.
@@ -28,8 +31,22 @@ class ScreenManager {
 public:
     /**
      * @brief Creates a new ScreenManager.
+     *
+     * @param display OLED display used for rendering.
+     * @param input Input manager used for button input.
+     * @param pet Pet manager controlling NetPet behavior.
+     * @param animator Animation manager controlling pet animations.
+     * @param petData Persistent NetPet data.
+     * @param progression Progression manager controlling XP and levels.
      */
-    ScreenManager(Adafruit_SSD1306& display, InputManager& input, PetManager& pet, AnimationManager& animator);
+    ScreenManager(
+        Adafruit_SSD1306& display,
+        InputManager& input,
+        PetManager& pet,
+        AnimationManager& animator,
+        PetData& petData,
+        ProgressionManager& progression
+    );
 
     /**
      * @brief Initializes the screen system.
@@ -48,6 +65,8 @@ public:
 
     /**
      * @brief Activates a screen.
+     *
+     * @param screen Screen to activate.
      */
     void show(ScreenId screen);
 
@@ -63,6 +82,8 @@ private:
     InputManager& input;
     PetManager& pet;
     AnimationManager& animator;
+    PetData& petData;
+    ProgressionManager& progression;
 
     ScreenId currentScreen = ScreenId::PET;
     uint8_t selectedMenuItem = 0;
@@ -73,6 +94,7 @@ private:
 
     void drawPet();
     void drawMenu();
+    void drawStats();
     void drawPlaceholder();
     void drawStatus();
 

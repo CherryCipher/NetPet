@@ -3,6 +3,9 @@
 #include <Arduino.h>
 #include "../animation/animationmanager.h"
 #include "../assets/animations.h"
+#include "../config/gameconfig.h"
+#include "../storage/petstorage.h"
+#include "petdata.h"
 
 /**
  * @brief Represents the current behavioral state of NetPet.
@@ -10,20 +13,23 @@
 enum class PetState : uint8_t {
     IDLE,
     SLEEP,
-    CONNECTING
+    CONNECTING,
+    DEAD
 };
 
 /**
- * @brief Controls NetPet behavior and animation selection.
+ * @brief Controls NetPet behavior, energy and life state.
  */
 class PetManager {
 public:
     /**
      * @brief Creates a new PetManager.
      *
-     * @param animator Animation manager used by the pet.
+     * @param animator Animation manager used by NetPet.
+     * @param data Persistent pet data.
+     * @param storage Persistent pet storage.
      */
-    explicit PetManager(AnimationManager& animator);
+    PetManager(AnimationManager& animator, PetData& data, PetStorage& storage);
 
     /**
      * @brief Initializes NetPet.
@@ -31,7 +37,7 @@ public:
     void begin();
 
     /**
-     * @brief Updates NetPet behavior.
+     * @brief Updates behavior and energy.
      */
     void update();
 
@@ -41,22 +47,38 @@ public:
     void activity();
 
     /**
-     * @brief Starts the temporary connection animation.
+     * @brief Starts the connection animation.
      */
     void connect();
 
     /**
-     * @brief Returns the current behavioral state.
+     * @brief Adds energy to NetPet.
+     *
+     * @param amount Energy to add.
+     */
+    void addEnergy(uint8_t amount);
+
+    /**
+     * @brief Returns the current energy level.
+     */
+    uint8_t getEnergy() const;
+
+    /**
+     * @brief Returns the current pet state.
      */
     PetState getState() const;
 
 private:
-    static constexpr unsigned long SLEEP_TIMEOUT = 20000;
-
     AnimationManager& animator;
+    PetData& data;
+    PetStorage& storage;
 
     PetState state = PetState::IDLE;
-    unsigned long lastActivity = 0;
 
+    unsigned long lastActivity = 0;
+    unsigned long lastEnergyDecay = 0;
+
+    void updateEnergy();
+    void die();
     void setState(PetState newState);
 };
