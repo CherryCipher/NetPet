@@ -10,7 +10,7 @@ void PetManager::begin() {
 
 void PetManager::update() {
     if (state == PetState::CONNECTING) {
-        if (!animator.isPlaying()) setState(PetState::IDLE);
+        if (animator.isFinished()) setState(PetState::IDLE);
         return;
     }
 

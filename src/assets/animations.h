@@ -43,7 +43,7 @@ const AnimationFrame CONNECT_FRAMES[] = {
 const Animation ANIMATION_CONNECT = {
     CONNECT_FRAMES,
     sizeof(CONNECT_FRAMES) / sizeof(CONNECT_FRAMES[0]),
-    true
+    false
 };
 
 
