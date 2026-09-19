@@ -161,7 +161,7 @@ void ScreenManager::drawPet() {
 }
 
 void ScreenManager::drawStatus() {
-    const unsigned long uptimeMinutes = progression.getUptime() / 60000;
+    const unsigned long uptimeSeconds = progression.getUptime() / 1000;
 
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
@@ -177,8 +177,8 @@ void ScreenManager::drawStatus() {
 
     display.setCursor(0, 8);
     display.print("UP:");
-    display.print(uptimeMinutes);
-    display.print("m");
+    display.print(uptimeSeconds);
+    display.print("s");
 
     display.setCursor(58, 8);
     display.print("x");

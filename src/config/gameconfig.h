@@ -9,7 +9,7 @@ namespace GameConfig {
     constexpr uint8_t MAX_ENERGY = 100;
 
     // Development value. Change this later for final gameplay balancing.
-    constexpr unsigned long ENERGY_DECAY_INTERVAL = 500;
+    constexpr unsigned long ENERGY_DECAY_INTERVAL = 1000;
 
     constexpr unsigned long SLEEP_TIMEOUT = 20000;
 
