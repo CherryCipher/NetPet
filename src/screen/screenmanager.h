@@ -44,6 +44,7 @@ public:
     void update();
     void render();
     void show(ScreenId screen);
+
     ScreenId getCurrentScreen() const;
 
 private:

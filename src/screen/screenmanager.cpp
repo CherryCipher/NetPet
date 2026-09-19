@@ -19,11 +19,15 @@ ScreenManager::ScreenManager(
 
 void ScreenManager::begin() {
     currentScreen = ScreenId::PET;
+
+    pet.setSleepEnabled(true);
+    pet.activity();
 }
 
 void ScreenManager::update() {
     if (pet.getState() == PetState::DEAD && currentScreen != ScreenId::PET) {
         currentScreen = ScreenId::PET;
+        pet.setSleepEnabled(true);
         return;
     }
 
@@ -83,7 +87,11 @@ void ScreenManager::show(ScreenId screen) {
 
     currentScreen = screen;
 
-    if (currentScreen == ScreenId::PET) pet.activity();
+    const bool petScreen = currentScreen == ScreenId::PET;
+
+    pet.setSleepEnabled(petScreen);
+
+    if (petScreen) pet.activity();
     if (currentScreen == ScreenId::WIFI) wifiScreen.begin();
 }
 
@@ -93,7 +101,6 @@ ScreenId ScreenManager::getCurrentScreen() const {
 
 void ScreenManager::updatePet() {
     if (input.wasPressed(Button::K4)) {
-        pet.activity();
         show(ScreenId::MENU);
         return;
     }
@@ -226,6 +233,7 @@ void ScreenManager::drawStats() {
     if (hours < 10) display.print("0");
     display.print(hours);
     display.print(":");
+
     if (minutes < 10) display.print("0");
     display.print(minutes);
 

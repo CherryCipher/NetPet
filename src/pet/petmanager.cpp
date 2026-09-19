@@ -6,6 +6,8 @@ PetManager::PetManager(AnimationManager& animator, PetData& data, PetStorage& st
 void PetManager::begin() {
     lastActivity = millis();
     lastEnergyDecay = millis();
+    sleepEnabled = true;
+    energyDecayPaused = false;
     setState(PetState::IDLE);
 }
 
@@ -22,7 +24,9 @@ void PetManager::update() {
         return;
     }
 
-    if (state == PetState::IDLE && millis() - lastActivity >= GameConfig::SLEEP_TIMEOUT) setState(PetState::SLEEP);
+    if (sleepEnabled && state == PetState::IDLE && millis() - lastActivity >= GameConfig::SLEEP_TIMEOUT) {
+        setState(PetState::SLEEP);
+    }
 }
 
 void PetManager::activity() {
@@ -62,6 +66,15 @@ void PetManager::resumeEnergyDecay() {
     lastEnergyDecay = millis();
 }
 
+void PetManager::setSleepEnabled(bool enabled) {
+    if (sleepEnabled == enabled) return;
+
+    sleepEnabled = enabled;
+    lastActivity = millis();
+
+    if (!sleepEnabled && state == PetState::SLEEP) setState(PetState::IDLE);
+}
+
 uint8_t PetManager::getEnergy() const {
     return data.energy;
 }
@@ -72,6 +85,10 @@ PetState PetManager::getState() const {
 
 bool PetManager::isEnergyDecayPaused() const {
     return energyDecayPaused;
+}
+
+bool PetManager::isSleepEnabled() const {
+    return sleepEnabled;
 }
 
 void PetManager::updateEnergy() {
@@ -96,6 +113,7 @@ void PetManager::die() {
     Serial.println("NetPet died.");
 
     energyDecayPaused = false;
+    sleepEnabled = false;
 
     storage.clear();
     setState(PetState::DEAD);
@@ -113,6 +131,7 @@ void PetManager::resetPet() {
     lastEnergyDecay = millis();
 
     energyDecayPaused = false;
+    sleepEnabled = true;
 
     setState(PetState::IDLE);
 }

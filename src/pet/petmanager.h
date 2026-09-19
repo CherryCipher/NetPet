@@ -36,9 +36,12 @@ public:
     void pauseEnergyDecay();
     void resumeEnergyDecay();
 
+    void setSleepEnabled(bool enabled);
+
     uint8_t getEnergy() const;
     PetState getState() const;
     bool isEnergyDecayPaused() const;
+    bool isSleepEnabled() const;
 
 private:
     AnimationManager& animator;
@@ -52,6 +55,7 @@ private:
     unsigned long lastEnergyDecay = 0;
 
     bool energyDecayPaused = false;
+    bool sleepEnabled = true;
 
     void updateEnergy();
     void die();
