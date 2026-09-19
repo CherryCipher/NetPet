@@ -26,4 +26,11 @@ void PetStorage::save(const PetData& data) {
 
 void PetStorage::clear() {
     preferences.clear();
+
+    Preferences foodPreferences;
+
+    if (foodPreferences.begin("netpetfood", false)) {
+        foodPreferences.clear();
+        foodPreferences.end();
+    }
 }
