@@ -20,6 +20,11 @@ void ScreenManager::begin() {
 }
 
 void ScreenManager::update() {
+    if (pet.getState() == PetState::DEAD && currentScreen != ScreenId::PET) {
+        currentScreen = ScreenId::PET;
+        return;
+    }
+
     switch (currentScreen) {
         case ScreenId::PET:
             updatePet();

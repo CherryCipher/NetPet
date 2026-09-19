@@ -46,4 +46,16 @@ const Animation ANIMATION_CONNECT = {
     false
 };
 
+const AnimationFrame DEATH_FRAMES[] = {
+    { FRAME_DEATH_00, 100 },
+    { FRAME_DEATH_01, 1000 },
+    { FRAME_DEATH_02, 4000 }
+};
+
+const Animation ANIMATION_DEATH = {
+    DEATH_FRAMES,
+    sizeof(DEATH_FRAMES) / sizeof(DEATH_FRAMES[0]),
+    false
+};
+
 

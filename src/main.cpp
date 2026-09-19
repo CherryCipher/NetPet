@@ -31,7 +31,7 @@ PetStorage petStorage;
 AnimationManager animator(display);
 InputManager input(BTN_K1, BTN_K2, BTN_K3, BTN_K4);
 ProgressionManager progression(petData);
-PetManager pet(animator, petData, petStorage);
+PetManager pet(animator, petData, petStorage, progression);
 ScreenManager screens(display, input, pet, animator, petData, progression);
 
 /**

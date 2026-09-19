@@ -1,7 +1,15 @@
 #include "petmanager.h"
 
-PetManager::PetManager(AnimationManager& animator, PetData& data, PetStorage& storage)
-    : animator(animator), data(data), storage(storage) {}
+PetManager::PetManager(
+    AnimationManager& animator,
+    PetData& data,
+    PetStorage& storage,
+    ProgressionManager& progression
+)
+    : animator(animator),
+      data(data),
+      storage(storage),
+      progression(progression) {}
 
 void PetManager::begin() {
     lastActivity = millis();
@@ -10,7 +18,10 @@ void PetManager::begin() {
 }
 
 void PetManager::update() {
-    if (state == PetState::DEAD) return;
+    if (state == PetState::DEAD) {
+        if (animator.isFinished()) resetPet();
+        return;
+    }
 
     updateEnergy();
 
@@ -71,12 +82,25 @@ void PetManager::updateEnergy() {
 }
 
 void PetManager::die() {
-    state = PetState::DEAD;
-    animator.stop();
+    Serial.println("NetPet died.");
 
     storage.clear();
+    setState(PetState::DEAD);
+}
 
-    Serial.println("NetPet died. Save data cleared.");
+void PetManager::resetPet() {
+    Serial.println("Creating new NetPet.");
+
+    data = PetData();
+
+    storage.save(data);
+
+    progression.resetSession();
+
+    lastActivity = millis();
+    lastEnergyDecay = millis();
+
+    setState(PetState::IDLE);
 }
 
 void PetManager::setState(PetState newState) {
@@ -98,7 +122,7 @@ void PetManager::setState(PetState newState) {
             break;
 
         case PetState::DEAD:
-            animator.stop();
+            animator.play(ANIMATION_DEATH, true);
             break;
     }
 }

@@ -1,11 +1,13 @@
 #pragma once
 
 #include <Arduino.h>
+
 #include "../animation/animationmanager.h"
 #include "../assets/animations.h"
 #include "../config/gameconfig.h"
 #include "../storage/petstorage.h"
 #include "petdata.h"
+#include "progressionmanager.h"
 
 /**
  * @brief Represents the current behavioral state of NetPet.
@@ -18,18 +20,19 @@ enum class PetState : uint8_t {
 };
 
 /**
- * @brief Controls NetPet behavior, energy and life state.
+ * @brief Controls NetPet behavior, energy and life cycle.
  */
 class PetManager {
 public:
     /**
      * @brief Creates a new PetManager.
-     *
-     * @param animator Animation manager used by NetPet.
-     * @param data Persistent pet data.
-     * @param storage Persistent pet storage.
      */
-    PetManager(AnimationManager& animator, PetData& data, PetStorage& storage);
+    PetManager(
+        AnimationManager& animator,
+        PetData& data,
+        PetStorage& storage,
+        ProgressionManager& progression
+    );
 
     /**
      * @brief Initializes NetPet.
@@ -37,7 +40,7 @@ public:
     void begin();
 
     /**
-     * @brief Updates behavior and energy.
+     * @brief Updates NetPet behavior and energy.
      */
     void update();
 
@@ -64,7 +67,7 @@ public:
     uint8_t getEnergy() const;
 
     /**
-     * @brief Returns the current pet state.
+     * @brief Returns the current behavioral state.
      */
     PetState getState() const;
 
@@ -72,6 +75,7 @@ private:
     AnimationManager& animator;
     PetData& data;
     PetStorage& storage;
+    ProgressionManager& progression;
 
     PetState state = PetState::IDLE;
 
@@ -80,5 +84,6 @@ private:
 
     void updateEnergy();
     void die();
+    void resetPet();
     void setState(PetState newState);
 };

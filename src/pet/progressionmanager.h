@@ -16,9 +16,14 @@ public:
     explicit ProgressionManager(PetData& data);
 
     /**
-     * @brief Starts a new uptime session.
+     * @brief Starts the progression system.
      */
     void begin();
+
+    /**
+     * @brief Resets the current uptime session.
+     */
+    void resetSession();
 
     /**
      * @brief Adds XP to the pet.
@@ -55,7 +60,7 @@ public:
     uint32_t calculateRssiXp(int rssi) const;
 
     /**
-     * @brief Calculates final XP including the uptime multiplier.
+     * @brief Calculates final food XP including the uptime multiplier.
      *
      * @param rssi Signal strength in dBm.
      */

@@ -4,6 +4,10 @@
 ProgressionManager::ProgressionManager(PetData& data) : data(data) {}
 
 void ProgressionManager::begin() {
+    resetSession();
+}
+
+void ProgressionManager::resetSession() {
     sessionStartedAt = millis();
 }
 
