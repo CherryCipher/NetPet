@@ -5,6 +5,7 @@
 
 #include <logger/logger.h>
 #include <wifi/WiFiManager.h>
+#include <ble/BLEManager.h>
 
 #include "animation/animationmanager.h"
 #include "input/inputmanager.h"
@@ -14,6 +15,7 @@
 #include "pet/progressionmanager.h"
 #include "screen/screenmanager.h"
 #include "screen/wifi/wifiscreen.h"
+#include "screen/ble/blescreen.h"
 #include "storage/petstorage.h"
 
 constexpr uint8_t SCREEN_WIDTH = 128;
@@ -32,6 +34,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 Logger logger;
 WiFiManager wifi(logger);
+BLEManager ble(logger);
 
 PetData petData;
 PetStorage petStorage;
@@ -43,14 +46,21 @@ PetManager pet(animator, petData, petStorage, progression);
 FoodManager food(petData, pet, progression, petStorage);
 
 WiFiScreen wifiScreen(display, input, wifi, food, pet, progression, animator);
-ScreenManager screens(display, input, pet, animator, petData, progression, wifiScreen);
+BLEScreen bleScreen(display, input, ble, food, pet, progression, animator);
 
-/**
- * @brief Initializes NetPet.
- */
+ScreenManager screens(
+    display,
+    input,
+    pet,
+    animator,
+    petData,
+    progression,
+    wifiScreen,
+    bleScreen
+);
+
 void setup() {
     Serial.begin(115200);
-
     Wire.begin(PIN_SDA, PIN_SCL);
 
     if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
@@ -62,6 +72,11 @@ void setup() {
 
     logger.start();
     wifi.start();
+
+    if (!ble.start()) {
+        Serial.println("BLE initialization failed!");
+        while (true) delay(100);
+    }
 
     if (!petStorage.begin()) {
         Serial.println("Pet storage initialization failed!");
@@ -83,15 +98,11 @@ void setup() {
     progression.begin();
     pet.begin();
     screens.begin();
-
     screens.render();
 
     Serial.println("NetPet ready");
 }
 
-/**
- * @brief Runs the NetPet application.
- */
 void loop() {
     input.update();
 

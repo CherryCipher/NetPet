@@ -7,7 +7,8 @@ ScreenManager::ScreenManager(
     AnimationManager& animator,
     PetData& petData,
     ProgressionManager& progression,
-    WiFiScreen& wifiScreen
+    WiFiScreen& wifiScreen,
+    BLEScreen& bleScreen
 )
     : display(display),
       input(input),
@@ -15,42 +16,26 @@ ScreenManager::ScreenManager(
       animator(animator),
       petData(petData),
       progression(progression),
-      wifiScreen(wifiScreen) {}
+      wifiScreen(wifiScreen),
+      bleScreen(bleScreen) {}
 
 void ScreenManager::begin() {
     currentScreen = ScreenId::PET;
-
-    pet.setSleepEnabled(true);
-    pet.activity();
+    pet.enterPetScreen();
 }
 
 void ScreenManager::update() {
     if (pet.getState() == PetState::DEAD && currentScreen != ScreenId::PET) {
         currentScreen = ScreenId::PET;
-        pet.setSleepEnabled(true);
         return;
     }
 
     switch (currentScreen) {
-        case ScreenId::PET:
-            updatePet();
-            break;
-
-        case ScreenId::MENU:
-            updateMenu();
-            break;
-
-        case ScreenId::STATS:
-            updateStats();
-            break;
-
-        case ScreenId::WIFI:
-            updateWiFi();
-            break;
-
-        case ScreenId::BLE:
-            updateBLE();
-            break;
+        case ScreenId::PET: updatePet(); break;
+        case ScreenId::MENU: updateMenu(); break;
+        case ScreenId::STATS: updateStats(); break;
+        case ScreenId::WIFI: updateWiFi(); break;
+        case ScreenId::BLE: updateBLE(); break;
     }
 }
 
@@ -58,25 +43,11 @@ void ScreenManager::render() {
     display.clearDisplay();
 
     switch (currentScreen) {
-        case ScreenId::PET:
-            drawPet();
-            break;
-
-        case ScreenId::MENU:
-            drawMenu();
-            break;
-
-        case ScreenId::STATS:
-            drawStats();
-            break;
-
-        case ScreenId::WIFI:
-            wifiScreen.draw();
-            break;
-
-        case ScreenId::BLE:
-            drawBLE();
-            break;
+        case ScreenId::PET: drawPet(); break;
+        case ScreenId::MENU: drawMenu(); break;
+        case ScreenId::STATS: drawStats(); break;
+        case ScreenId::WIFI: wifiScreen.draw(); break;
+        case ScreenId::BLE: bleScreen.draw(); break;
     }
 
     display.display();
@@ -95,6 +66,7 @@ void ScreenManager::show(ScreenId screen) {
     pet.setSleepEnabled(false);
 
     if (currentScreen == ScreenId::WIFI) wifiScreen.begin();
+    if (currentScreen == ScreenId::BLE) bleScreen.begin();
 }
 
 ScreenId ScreenManager::getCurrentScreen() const {
@@ -138,22 +110,14 @@ void ScreenManager::updateWiFi() {
 }
 
 void ScreenManager::updateBLE() {
-    if (input.wasPressed(Button::K4)) show(ScreenId::MENU);
+    if (bleScreen.update()) show(ScreenId::MENU);
 }
 
 void ScreenManager::selectMenuItem() {
     switch (selectedMenuItem) {
-        case 0:
-            show(ScreenId::STATS);
-            break;
-
-        case 1:
-            show(ScreenId::WIFI);
-            break;
-
-        case 2:
-            show(ScreenId::BLE);
-            break;
+        case 0: show(ScreenId::STATS); break;
+        case 1: show(ScreenId::WIFI); break;
+        case 2: show(ScreenId::BLE); break;
     }
 }
 
@@ -248,18 +212,4 @@ void ScreenManager::drawStats() {
     display.print(petData.wifiEaten);
     display.print(" BLE:");
     display.print(petData.bleEaten);
-}
-
-void ScreenManager::drawBLE() {
-    display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
-
-    display.setCursor(0, 0);
-    display.print("SCAN BLE");
-
-    display.setCursor(0, 24);
-    display.print("COMING SOON");
-
-    display.setCursor(0, 56);
-    display.print("K4 BACK");
 }

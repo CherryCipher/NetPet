@@ -23,33 +23,16 @@ struct EatResult {
  */
 class FoodManager {
 public:
-    /**
-     * @brief Creates a new FoodManager.
-     */
     FoodManager(PetData& data, PetManager& pet, ProgressionManager& progression, PetStorage& storage);
 
-    /**
-     * @brief Initializes persistent food storage.
-     */
     bool begin();
 
-    /**
-     * @brief Returns whether a Wi-Fi BSSID has already been eaten.
-     */
     bool isWiFiEaten(const String& bssid);
-
-    /**
-     * @brief Eats a Wi-Fi access point.
-     *
-     * @param bssid Access point BSSID.
-     * @param rssi Current RSSI.
-     * @return XP and energy gained.
-     */
     EatResult eatWiFi(const String& bssid, int32_t rssi);
 
-    /**
-     * @brief Clears all persistent food history.
-     */
+    bool isBLEEaten(const String& address);
+    EatResult eatBLE(const String& address, int32_t rssi);
+
     void clear();
 
 private:
@@ -59,8 +42,8 @@ private:
     PetManager& pet;
     ProgressionManager& progression;
     PetStorage& storage;
-
     Preferences preferences;
 
     String makeWiFiKey(const String& bssid) const;
+    String makeBLEKey(const String& address) const;
 };

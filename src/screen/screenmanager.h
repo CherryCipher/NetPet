@@ -10,10 +10,8 @@
 #include "../pet/petdata.h"
 #include "../pet/progressionmanager.h"
 #include "wifi/wifiscreen.h"
+#include "ble/blescreen.h"
 
-/**
- * @brief Identifies the available NetPet screens.
- */
 enum class ScreenId : uint8_t {
     PET,
     MENU,
@@ -22,12 +20,6 @@ enum class ScreenId : uint8_t {
     BLE
 };
 
-/**
- * @brief Controls NetPet screen navigation and rendering.
- *
- * ScreenManager is the only component allowed to send the display buffer
- * to the physical OLED.
- */
 class ScreenManager {
 public:
     ScreenManager(
@@ -37,7 +29,8 @@ public:
         AnimationManager& animator,
         PetData& petData,
         ProgressionManager& progression,
-        WiFiScreen& wifiScreen
+        WiFiScreen& wifiScreen,
+        BLEScreen& bleScreen
     );
 
     void begin();
@@ -57,6 +50,7 @@ private:
     PetData& petData;
     ProgressionManager& progression;
     WiFiScreen& wifiScreen;
+    BLEScreen& bleScreen;
 
     ScreenId currentScreen = ScreenId::PET;
     uint8_t selectedMenuItem = 0;
@@ -70,7 +64,6 @@ private:
     void drawPet();
     void drawMenu();
     void drawStats();
-    void drawBLE();
     void drawStatus();
 
     void selectMenuItem();
