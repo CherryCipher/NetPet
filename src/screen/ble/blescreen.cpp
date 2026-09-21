@@ -209,7 +209,7 @@ void BLEScreen::startEating() {
     Serial.print(" -> ");
     Serial.println(newLevel);
 
-    animator.play(ANIMATION_EAT, true);
+    animator.play(ANIMATION_EAT_BLE, true);
     state = State::EATING;
 }
 

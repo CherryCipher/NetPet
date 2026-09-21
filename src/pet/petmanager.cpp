@@ -84,7 +84,7 @@ void PetManager::enterPetScreen() {
     lastActivity = millis();
 
     state = PetState::IDLE;
-    animator.play(ANIMATION_IDLE, true);
+    //animator.play(ANIMATION_IDLE, true);
 }
 
 uint8_t PetManager::getEnergy() const {
@@ -153,7 +153,7 @@ void PetManager::setState(PetState newState) {
 
     state = newState;
 
-    switch (state) {
+    /* switch (state) {
         case PetState::IDLE:
             animator.play(ANIMATION_IDLE, true);
             break;
@@ -169,5 +169,5 @@ void PetManager::setState(PetState newState) {
         case PetState::DEAD:
             animator.play(ANIMATION_DEATH, true);
             break;
-    }
+    } */
 }

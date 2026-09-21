@@ -1,13 +1,14 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../assets/bitmap.h"
 
 /**
  * @brief Represents a single bitmap frame in an animation.
  */
 struct AnimationFrame {
-    const uint8_t* bitmap;    ///< Pointer to the bitmap data stored in flash.
-    uint16_t duration;        ///< Duration of the frame in milliseconds.
+    const Bitmap* bitmap;      ///< Bitmap displayed for this frame.
+    uint16_t duration;         ///< Duration of the frame in milliseconds.
 };
 
 /**

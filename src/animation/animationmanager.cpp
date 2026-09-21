@@ -8,6 +8,7 @@ void AnimationManager::play(const Animation& animation, bool restart) {
     currentAnimation = &animation;
     currentFrame = 0;
     frameStartedAt = millis();
+
     playing = true;
     finished = false;
 }
@@ -16,6 +17,7 @@ void AnimationManager::stop() {
     currentAnimation = nullptr;
     currentFrame = 0;
     frameStartedAt = 0;
+
     playing = false;
     finished = false;
 }
@@ -44,17 +46,18 @@ void AnimationManager::update() {
     finished = true;
 }
 
-void AnimationManager::draw() const {
+void AnimationManager::draw(int16_t x, int16_t y) const {
     if (!currentAnimation || currentAnimation->frameCount == 0) return;
 
     const AnimationFrame& frame = currentAnimation->frames[currentFrame];
+    if (!frame.bitmap || !frame.bitmap->data) return;
 
     display.drawBitmap(
-        FACE_X,
-        FACE_Y,
-        frame.bitmap,
-        FACE_WIDTH,
-        FACE_HEIGHT,
+        x,
+        y,
+        frame.bitmap->data,
+        frame.bitmap->width,
+        frame.bitmap->height,
         SSD1306_WHITE
     );
 }

@@ -3,84 +3,81 @@
 #include "../animation/animation.h"
 #include "frames.h"
 
-
-const AnimationFrame IDLE_FRAMES[] = {
-    { FRAME_NORMAL_00, 5000 },
-    { FRAME_NORMAL_01_BLINK, 200 }
+/**
+ * @brief WiFi eating animation.
+ */
+const AnimationFrame EAT_WIFI_FRAMES[] = {
+    { &FRAME_FISH_EAT_WIFI1, 100 },
+    { &FRAME_FISH_EAT_WIFI2, 100 },
+    { &FRAME_FISH_EAT_WIFI3, 100 },
+    { &FRAME_FISH_EAT_WIFI4, 100 },
+    { &FRAME_FISH_EAT_WIFI5, 100 },
+    { &FRAME_FISH_EAT_WIFI6, 100 },
+    { &FRAME_FISH_EAT_WIFI7, 100 },
+    { &FRAME_FISH_EAT_WIFI8, 100 },
+    { &FRAME_FISH_EAT_WIFI9, 100 },
+    { &FRAME_FISH_EAT_WIFI10, 100 },
+    { &FRAME_FISH_EAT_WIFI11, 100 },
+    { &FRAME_FISH_EAT_WIFI12, 100 },
+    { &FRAME_FISH_EAT_WIFI13, 100 },
+    { &FRAME_FISH_EAT_WIFI14, 100 },
+    { &FRAME_FISH_EAT_WIFI15, 100 },
+    { &FRAME_FISH_EAT_WIFI16, 100 },
+    { &FRAME_FISH_EAT_WIFI17, 500 }
 };
 
-const Animation ANIMATION_IDLE = {
-    IDLE_FRAMES,
-    sizeof(IDLE_FRAMES) / sizeof(IDLE_FRAMES[0]),
-    true
-};
-
-
-const AnimationFrame SLEEP_FRAMES[] = {
-    { FRAME_SLEEP_00, 1000 },
-    { FRAME_SLEEP_01, 500 }
-};
-
-const Animation ANIMATION_SLEEP = {
-    SLEEP_FRAMES,
-    sizeof(SLEEP_FRAMES) / sizeof(SLEEP_FRAMES[0]),
-    true
-};
-
-const AnimationFrame CONNECT_FRAMES[] = {
-    { FRAME_ETHERNET_00, 500 },
-    { FRAME_ETHERNET_01, 100 },
-    { FRAME_ETHERNET_02, 200 },
-    { FRAME_ETHERNET_03, 500 },
-    { FRAME_ETHERNET_02, 100 },
-    { FRAME_ETHERNET_04, 100 },
-    { FRAME_ETHERNET_05, 100 },
-    { FRAME_ETHERNET_06, 200 },
-    { FRAME_ETHERNET_07, 200 },
-    { FRAME_ETHERNET_08, 1000 }
-};
-
-const Animation ANIMATION_CONNECT = {
-    CONNECT_FRAMES,
-    sizeof(CONNECT_FRAMES) / sizeof(CONNECT_FRAMES[0]),
+const Animation ANIMATION_EAT_WIFI = {
+    EAT_WIFI_FRAMES,
+    sizeof(EAT_WIFI_FRAMES) / sizeof(EAT_WIFI_FRAMES[0]),
     false
 };
 
-const AnimationFrame DEATH_FRAMES[] = {
-    { FRAME_DEATH_00, 100 },
-    { FRAME_DEATH_01, 1000 },
-    { FRAME_DEATH_02, 4000 }
+/**
+ * @brief BLE eating animation.
+ */
+const AnimationFrame EAT_BLE_FRAMES[] = {
+    { &FRAME_FISH_EAT_WIFI1, 100 },
+    { &FRAME_FISH_EAT_WIFI2, 100 },
+    { &FRAME_FISH_EAT_WIFI3, 100 },
+    { &FRAME_FISH_EAT_WIFI4, 100 },
+    { &FRAME_FISH_EAT_WIFI5, 100 },
+    { &FRAME_FISH_EAT_WIFI6, 100 },
+    { &FRAME_FISH_EAT_WIFI7, 100 },
+    { &FRAME_FISH_EAT_WIFI8, 100 },
+    { &FRAME_FISH_EAT_WIFI9, 100 },
+    { &FRAME_FISH_EAT_WIFI10, 100 },
+    { &FRAME_FISH_EAT_WIFI11, 100 },
+    { &FRAME_FISH_EAT_WIFI12, 100 },
+    { &FRAME_FISH_EAT_WIFI13, 100 },
+    { &FRAME_FISH_EAT_WIFI14, 100 },
+    { &FRAME_FISH_EAT_WIFI15, 100 },
+    { &FRAME_FISH_EAT_WIFI16, 100 },
+    { &FRAME_FISH_EAT_WIFI17, 500 }
 };
 
-const Animation ANIMATION_DEATH = {
-    DEATH_FRAMES,
-    sizeof(DEATH_FRAMES) / sizeof(DEATH_FRAMES[0]),
+const Animation ANIMATION_EAT_BLE = {
+    EAT_BLE_FRAMES,
+    sizeof(EAT_BLE_FRAMES) / sizeof(EAT_BLE_FRAMES[0]),
     false
 };
 
-const AnimationFrame EAT_FRAMES[] = {
-    { FRAME_EAT_00, 200 },
-    { FRAME_EAT_01, 200 },
-    { FRAME_EAT_02, 200 },
-    { FRAME_EAT_03, 500 },
-    { FRAME_EAT_04, 500 },
-    { FRAME_EAT_03, 500 },
-    { FRAME_EAT_04, 500 },
-    { FRAME_EAT_03, 500 },
-    { FRAME_EAT_04, 500 },
-    { FRAME_EAT_03, 500 },
-    { FRAME_EAT_04, 500 }
-};
-
-const Animation ANIMATION_EAT = {
-    EAT_FRAMES,
-    sizeof(EAT_FRAMES) / sizeof(EAT_FRAMES[0]),
-    false
-};
-
+/**
+ * @brief Level-up animation.
+ */
 const AnimationFrame LEVEL_UP_FRAMES[] = {
-    { FRAME_LEVELUP_00, 200 },
-    { FRAME_LEVELUP_01, 200 }
+    { &FRAME_FISH_LEVELUP1, 100 },
+    { &FRAME_FISH_LEVELUP2, 100 },
+    { &FRAME_FISH_LEVELUP3, 100 },
+    { &FRAME_FISH_LEVELUP4, 100 },
+    { &FRAME_FISH_LEVELUP5, 100 },
+    { &FRAME_FISH_LEVELUP6, 100 },
+    { &FRAME_FISH_LEVELUP7, 100 },
+    { &FRAME_FISH_LEVELUP8, 100 },
+    { &FRAME_FISH_LEVELUP9, 100 },
+    { &FRAME_FISH_LEVELUP10, 100 },
+    { &FRAME_FISH_LEVELUP11, 100 },
+    { &FRAME_FISH_LEVELUP12, 100 },
+    { &FRAME_FISH_LEVELUP13, 700 }
 };
 
 const Animation ANIMATION_LEVEL_UP = {
@@ -88,5 +85,3 @@ const Animation ANIMATION_LEVEL_UP = {
     sizeof(LEVEL_UP_FRAMES) / sizeof(LEVEL_UP_FRAMES[0]),
     false
 };
-
-
