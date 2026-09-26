@@ -1,164 +1,189 @@
-#include "petmanager.h"
+#include "petidle.h"
 
-PetManager::PetManager(AnimationManager& animator, PetData& data, PetStorage& storage, ProgressionManager& progression)
-    : animator(animator), data(data), storage(storage), progression(progression) {}
+PetIdle::PetIdle(Adafruit_SSD1306& display) : display(display) {}
 
-void PetManager::begin() {
-    lastActivity = millis();
-    lastEnergyDecay = millis();
+void PetIdle::begin() {
+    sleeping = false;
+    sick = false;
 
-    sleepEnabled = true;
-    energyDecayPaused = false;
-    state = PetState::IDLE;
-}
+    y = WORLD_TOP + ((WORLD_BOTTOM - WORLD_TOP - FISH_HEIGHT) / 2);
 
-void PetManager::update() {
-    if (state == PetState::DEAD) {
-        if (animator.isFinished()) resetPet();
-        return;
-    }
+    for (Bubble& bubble : bubbles) bubble.active = false;
 
-    updateEnergy();
-
-    if (state == PetState::CONNECTING) {
-        if (animator.isFinished()) setState(PetState::IDLE);
-        return;
-    }
-
-    if (sleepEnabled && state == PetState::IDLE && millis() - lastActivity >= GameConfig::SLEEP_TIMEOUT) {
-        setState(PetState::SLEEP);
-    }
-}
-
-void PetManager::activity() {
-    if (state == PetState::DEAD) return;
-
-    lastActivity = millis();
-
-    if (state == PetState::SLEEP) setState(PetState::IDLE);
-}
-
-void PetManager::connect() {
-    if (state == PetState::DEAD) return;
-
-    lastActivity = millis();
-    setState(PetState::CONNECTING);
-}
-
-void PetManager::addEnergy(uint8_t amount) {
-    if (state == PetState::DEAD) return;
-
-    const uint16_t newEnergy = static_cast<uint16_t>(data.energy) + amount;
-    data.energy = newEnergy > GameConfig::MAX_ENERGY ? GameConfig::MAX_ENERGY : newEnergy;
-
-    storage.save(data);
-}
-
-void PetManager::pauseEnergyDecay() {
-    if (energyDecayPaused) return;
-    energyDecayPaused = true;
-}
-
-void PetManager::resumeEnergyDecay() {
-    if (!energyDecayPaused) return;
-
-    energyDecayPaused = false;
-    lastEnergyDecay = millis();
-}
-
-void PetManager::setSleepEnabled(bool enabled) {
-    if (sleepEnabled == enabled) return;
-
-    sleepEnabled = enabled;
-    lastActivity = millis();
-
-    if (!sleepEnabled && state == PetState::SLEEP) setState(PetState::IDLE);
-}
-
-void PetManager::enterPetScreen() {
-    if (state == PetState::DEAD) return;
-
-    sleepEnabled = true;
-    lastActivity = millis();
-    state = PetState::IDLE;
-}
-
-uint8_t PetManager::getEnergy() const {
-    return data.energy;
-}
-
-PetState PetManager::getState() const {
-    return state;
-}
-
-bool PetManager::isEnergyDecayPaused() const {
-    return energyDecayPaused;
-}
-
-bool PetManager::isSleepEnabled() const {
-    return sleepEnabled;
-}
-
-void PetManager::updateEnergy() {
-    if (energyDecayPaused) return;
+    resetFromOutside();
 
     const unsigned long now = millis();
 
-    if (now - lastEnergyDecay < GameConfig::ENERGY_DECAY_INTERVAL) return;
+    lastMove = now;
+    lastBubble = now;
+    lastBubbleMove = now;
 
-    const unsigned long intervals = (now - lastEnergyDecay) / GameConfig::ENERGY_DECAY_INTERVAL;
-    lastEnergyDecay += intervals * GameConfig::ENERGY_DECAY_INTERVAL;
-
-    if (intervals >= data.energy) data.energy = 0;
-    else data.energy -= intervals;
-
-    storage.save(data);
-
-    if (data.energy == 0) die();
+    idleState = IdleState::SWIMMING;
+    nextPause = now + random(2500, 6000);
 }
 
-void PetManager::die() {
-    Serial.println("NetPet died.");
+void PetIdle::update() {
+    updateBubbles();
 
-    energyDecayPaused = false;
-    sleepEnabled = false;
+    if (sleeping) return;
 
-    storage.clear();
-    setState(PetState::DEAD);
+    updateFish();
 }
 
-void PetManager::resetPet() {
-    Serial.println("Creating new NetPet.");
-
-    data = PetData();
-    storage.save(data);
-    progression.resetSession();
-
-    lastActivity = millis();
-    lastEnergyDecay = millis();
-
-    energyDecayPaused = false;
-    sleepEnabled = true;
-
-    setState(PetState::IDLE);
-}
-
-void PetManager::setState(PetState newState) {
-    if (state == newState) return;
-
-    state = newState;
-
-    switch (state) {
-        case PetState::IDLE:
-        case PetState::SLEEP:
-            break;
-
-/*         case PetState::CONNECTING:
-            animator.play(ANIMATION_CONNECT, true);
-            break;
-
-        case PetState::DEAD:
-            animator.play(ANIMATION_DEATH, true);
-            break; */
+void PetIdle::draw() const {
+    for (const Bubble& bubble : bubbles) {
+        if (!bubble.active) continue;
+        display.drawPixel(bubble.x, bubble.y, SSD1306_WHITE);
     }
+
+    if (idleState != IdleState::OFFSCREEN) {
+        const Bitmap& fish = getFishBitmap();
+
+        display.drawBitmap(
+            x,
+            y,
+            fish.data,
+            fish.width,
+            fish.height,
+            SSD1306_WHITE
+        );
+    }
+
+    if (sleeping && idleState != IdleState::OFFSCREEN) {
+        display.setTextSize(1);
+        display.setTextColor(SSD1306_WHITE);
+
+        display.setCursor(x + FISH_WIDTH - 2, y);
+        display.print("z");
+
+        display.setCursor(x + FISH_WIDTH + 4, y - 7);
+        display.print("Z");
+    }
+}
+
+void PetIdle::sleep() {
+    sleeping = true;
+}
+
+void PetIdle::wake() {
+    if (!sleeping) return;
+
+    sleeping = false;
+
+    const unsigned long now = millis();
+
+    lastMove = now;
+    lastBubble = now;
+
+    if (idleState == IdleState::PAUSED) startSwimming();
+}
+
+void PetIdle::setSick(bool sick) {
+    this->sick = sick;
+}
+
+void PetIdle::updateFish() {
+    const unsigned long now = millis();
+
+    if (idleState == IdleState::PAUSED) {
+        if (now >= stateUntil) startSwimming();
+        return;
+    }
+
+    if (idleState == IdleState::OFFSCREEN) {
+        if (now >= stateUntil) {
+            resetFromOutside();
+            startSwimming();
+        }
+
+        return;
+    }
+
+    if (now - lastMove < MOVE_INTERVAL) return;
+    lastMove = now;
+
+    x += direction;
+
+    if (isFullyOffscreen()) {
+        startOffscreen();
+        return;
+    }
+
+    if (isFullyVisible() && now >= nextPause) {
+        startPause();
+        return;
+    }
+
+    if (now - lastBubble >= BUBBLE_INTERVAL) {
+        spawnBubble();
+        lastBubble = now;
+    }
+}
+
+void PetIdle::updateBubbles() {
+    const unsigned long now = millis();
+
+    if (now - lastBubbleMove < BUBBLE_MOVE_INTERVAL) return;
+    lastBubbleMove = now;
+
+    for (Bubble& bubble : bubbles) {
+        if (!bubble.active) continue;
+
+        bubble.y--;
+
+        if (bubble.y < WORLD_TOP) bubble.active = false;
+    }
+}
+
+void PetIdle::spawnBubble() {
+    for (Bubble& bubble : bubbles) {
+        if (bubble.active) continue;
+
+        bubble.x = direction > 0 ? x : x + FISH_WIDTH;
+        bubble.y = y + (FISH_HEIGHT / 2) + random(-4, 5);
+        bubble.active = true;
+
+        return;
+    }
+}
+
+void PetIdle::startSwimming() {
+    const unsigned long now = millis();
+
+    idleState = IdleState::SWIMMING;
+    lastMove = now;
+    nextPause = now + random(2500, 6000);
+}
+
+void PetIdle::startPause() {
+    idleState = IdleState::PAUSED;
+    stateUntil = millis() + random(500, 2000);
+}
+
+void PetIdle::startOffscreen() {
+    idleState = IdleState::OFFSCREEN;
+    stateUntil = millis() + random(1000, 4000);
+}
+
+void PetIdle::resetFromOutside() {
+    direction = random(0, 2) == 0 ? -1 : 1;
+
+    if (direction > 0) x = -FISH_WIDTH;
+    else x = SCREEN_WIDTH;
+}
+
+bool PetIdle::isFullyOffscreen() const {
+    if (direction > 0) return x > SCREEN_WIDTH;
+    return x < -FISH_WIDTH;
+}
+
+bool PetIdle::isFullyVisible() const {
+    return x >= 0 && x <= SCREEN_WIDTH - FISH_WIDTH;
+}
+
+const Bitmap& PetIdle::getFishBitmap() const {
+    if (sleeping) return direction > 0 ? FRAME_FISH_SLEEP_RIGHT : FRAME_FISH_SLEEP_LEFT;
+    if (sick) return direction > 0 ? FRAME_FISH_SICK_RIGHT : FRAME_FISH_SICK_LEFT;
+
+    return direction > 0 ? FRAME_FISH_RIGHT : FRAME_FISH_LEFT;
 }

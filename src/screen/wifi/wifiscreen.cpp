@@ -184,13 +184,11 @@ void WiFiScreen::startEating() {
     const WiFiNetwork& network = wifi.getNetwork(networkIndices[selectedIndex]);
 
     eatenName = getDisplayName(network);
-
     previousLevel = progression.getLevel();
 
     pet.pauseEnergyDecay();
 
     eatResult = food.eatWiFi(network.bssid, network.rssi);
-
     newLevel = progression.getLevel();
 
     Serial.print("WiFi eaten: ");
@@ -203,7 +201,6 @@ void WiFiScreen::startEating() {
     Serial.println(newLevel);
 
     animator.play(ANIMATION_EAT_WIFI, true);
-
     state = State::EATING;
 }
 
@@ -219,13 +216,11 @@ void WiFiScreen::startLevelUp() {
     Serial.println(newLevel);
 
     animator.play(ANIMATION_LEVEL_UP, true);
-
     state = State::LEVEL_UP;
 }
 
 void WiFiScreen::finishFlow() {
     pet.resumeEnergyDecay();
-
     rebuildNetworkList();
 }
 
@@ -296,17 +291,6 @@ void WiFiScreen::drawError() {
 }
 
 void WiFiScreen::drawEating() {
-    display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
-
-    display.setCursor(0, 0);
-    display.print("EATING ");
-
-    String name = eatenName;
-    if (name.length() > 18) name = name.substring(0, 18);
-
-    display.print(name);
-
     animator.draw();
 }
 
@@ -337,12 +321,6 @@ void WiFiScreen::drawEatResult() {
 }
 
 void WiFiScreen::drawLevelUp() {
-    display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
-
-    display.setCursor(34, 0);
-    display.print("LEVEL UP!");
-
     animator.draw();
 }
 

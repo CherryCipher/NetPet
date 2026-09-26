@@ -219,6 +219,11 @@ void BLEScreen::finishEating() {
 }
 
 void BLEScreen::startLevelUp() {
+    Serial.print("Level up! ");
+    Serial.print(previousLevel);
+    Serial.print(" -> ");
+    Serial.println(newLevel);
+
     animator.play(ANIMATION_LEVEL_UP, true);
     state = State::LEVEL_UP;
 }
@@ -310,17 +315,6 @@ void BLEScreen::drawError() {
 }
 
 void BLEScreen::drawEating() {
-    display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
-
-    display.setCursor(0, 0);
-    display.print("EATING ");
-
-    String name = eatenName;
-    if (name.length() > 18) name = name.substring(0, 18);
-
-    display.print(name);
-
     animator.draw();
 }
 
@@ -351,12 +345,6 @@ void BLEScreen::drawEatResult() {
 }
 
 void BLEScreen::drawLevelUp() {
-    display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
-
-    display.setCursor(34, 0);
-    display.print("LEVEL UP!");
-
     animator.draw();
 }
 

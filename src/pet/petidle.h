@@ -21,6 +21,7 @@ public:
 
     void sleep();
     void wake();
+    void setSick(bool sick);
 
 private:
     static constexpr int SCREEN_WIDTH = 128;
@@ -33,8 +34,15 @@ private:
 
     static constexpr unsigned long MOVE_INTERVAL = 35;
     static constexpr unsigned long BUBBLE_INTERVAL = 900;
+    static constexpr unsigned long BUBBLE_MOVE_INTERVAL = 100;
 
     static constexpr uint8_t BUBBLE_COUNT = 4;
+
+    enum class IdleState : uint8_t {
+        SWIMMING,
+        PAUSED,
+        OFFSCREEN
+    };
 
     struct Bubble {
         int16_t x = 0;
@@ -49,18 +57,29 @@ private:
     int8_t direction = 1;
 
     bool sleeping = false;
+    bool sick = false;
+
+    IdleState idleState = IdleState::SWIMMING;
 
     unsigned long lastMove = 0;
     unsigned long lastBubble = 0;
-    unsigned long nextDirectionChange = 0;
+    unsigned long lastBubbleMove = 0;
+    unsigned long stateUntil = 0;
+    unsigned long nextPause = 0;
 
     Bubble bubbles[BUBBLE_COUNT];
 
     void updateFish();
     void updateBubbles();
     void spawnBubble();
-    void chooseDirection();
+
+    void startSwimming();
+    void startPause();
+    void startOffscreen();
     void resetFromOutside();
+
+    bool isFullyOffscreen() const;
+    bool isFullyVisible() const;
 
     const Bitmap& getFishBitmap() const;
 };

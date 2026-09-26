@@ -85,6 +85,8 @@ void ScreenManager::updatePet() {
 
     if (input.anyPressed()) pet.activity();
 
+    petIdle.setSick(pet.getEnergy() <= 25);
+
     if (pet.getState() == PetState::SLEEP) petIdle.sleep();
     else petIdle.wake();
 

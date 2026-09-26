@@ -4,6 +4,7 @@ PetIdle::PetIdle(Adafruit_SSD1306& display) : display(display) {}
 
 void PetIdle::begin() {
     sleeping = false;
+    sick = false;
 
     y = WORLD_TOP + ((WORLD_BOTTOM - WORLD_TOP - FISH_HEIGHT) / 2);
 
@@ -44,8 +45,10 @@ void PetIdle::draw() const {
     if (sleeping) {
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
+
         display.setCursor(x + FISH_WIDTH - 2, y);
         display.print("z");
+
         display.setCursor(x + FISH_WIDTH + 4, y - 7);
         display.print("Z");
     }
@@ -62,6 +65,10 @@ void PetIdle::wake() {
     lastMove = millis();
     lastBubble = millis();
     nextDirectionChange = millis() + random(2500, 6000);
+}
+
+void PetIdle::setSick(bool sick) {
+    this->sick = sick;
 }
 
 void PetIdle::updateFish() {
@@ -131,6 +138,8 @@ void PetIdle::resetFromOutside() {
 }
 
 const Bitmap& PetIdle::getFishBitmap() const {
-    if (sleeping) return direction > 0 ? FRAME_FISH_SICK_RIGHT : FRAME_FISH_SICK_LEFT;
+    if (sleeping) return direction > 0 ? FRAME_FISH_SLEEP_RIGHT : FRAME_FISH_SLEEP_LEFT;
+    if (sick) return direction > 0 ? FRAME_FISH_SICK_RIGHT : FRAME_FISH_SICK_LEFT;
+
     return direction > 0 ? FRAME_FISH_RIGHT : FRAME_FISH_LEFT;
 }
