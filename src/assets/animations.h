@@ -85,3 +85,29 @@ const Animation ANIMATION_LEVEL_UP = {
     sizeof(LEVEL_UP_FRAMES) / sizeof(LEVEL_UP_FRAMES[0]),
     false
 };
+
+/**
+ * @brief DIE animation.
+ */
+const AnimationFrame DEATH_FRAMES[] = {
+    { &FRAME_FISH_DIE1, 100 },
+    { &FRAME_FISH_DIE2, 100 },
+    { &FRAME_FISH_DIE3, 100 },
+    { &FRAME_FISH_DIE4, 100 },
+    { &FRAME_FISH_DIE5, 100 },
+    { &FRAME_FISH_DIE6, 100 },
+    { &FRAME_FISH_DIE7, 100 },
+    { &FRAME_FISH_DIE8, 100 },
+    { &FRAME_FISH_DIE9, 100 },
+    { &FRAME_FISH_DIE10, 300 },
+    { &FRAME_FISH_DIE11, 300 },
+    { &FRAME_FISH_DIE12, 300 },
+    { &FRAME_FISH_DIE13, 300 },
+    { &FRAME_FISH_DIE14, 300 }
+};
+
+const Animation ANIMATION_DEATH = {
+    DEATH_FRAMES,
+    sizeof(DEATH_FRAMES) / sizeof(DEATH_FRAMES[0]),
+    false
+};
