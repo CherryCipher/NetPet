@@ -12,9 +12,14 @@ void PetIdle::begin() {
 
     resetFromOutside();
 
-    lastMove = millis();
-    lastBubble = millis();
-    nextDirectionChange = millis() + random(2500, 6000);
+    const unsigned long now = millis();
+
+    lastMove = now;
+    lastBubble = now;
+    lastBubbleMove = now;
+
+    idleState = IdleState::SWIMMING;
+    nextPause = now + random(2500, 6000);
 }
 
 void PetIdle::update() {
@@ -31,18 +36,20 @@ void PetIdle::draw() const {
         display.drawPixel(bubble.x, bubble.y, SSD1306_WHITE);
     }
 
-    const Bitmap& fish = getFishBitmap();
+    if (idleState != IdleState::OFFSCREEN) {
+        const Bitmap& fish = getFishBitmap();
 
-    display.drawBitmap(
-        x,
-        y,
-        fish.data,
-        fish.width,
-        fish.height,
-        SSD1306_WHITE
-    );
+        display.drawBitmap(
+            x,
+            y,
+            fish.data,
+            fish.width,
+            fish.height,
+            SSD1306_WHITE
+        );
+    }
 
-    if (sleeping) {
+    if (sleeping && idleState != IdleState::OFFSCREEN) {
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
 
@@ -62,9 +69,13 @@ void PetIdle::wake() {
     if (!sleeping) return;
 
     sleeping = false;
-    lastMove = millis();
-    lastBubble = millis();
-    nextDirectionChange = millis() + random(2500, 6000);
+
+    const unsigned long now = millis();
+
+    lastMove = now;
+    lastBubble = now;
+
+    if (idleState == IdleState::PAUSED) startSwimming();
 }
 
 void PetIdle::setSick(bool sick) {
@@ -74,22 +85,33 @@ void PetIdle::setSick(bool sick) {
 void PetIdle::updateFish() {
     const unsigned long now = millis();
 
+    if (idleState == IdleState::PAUSED) {
+        if (now >= stateUntil) startSwimming();
+        return;
+    }
+
+    if (idleState == IdleState::OFFSCREEN) {
+        if (now >= stateUntil) {
+            resetFromOutside();
+            startSwimming();
+        }
+
+        return;
+    }
+
     if (now - lastMove < MOVE_INTERVAL) return;
     lastMove = now;
 
     x += direction;
 
-    if (direction > 0 && x > SCREEN_WIDTH) {
-        direction = -1;
-        x = SCREEN_WIDTH;
-    } else if (direction < 0 && x < -FISH_WIDTH) {
-        direction = 1;
-        x = -FISH_WIDTH;
+    if (isFullyOffscreen()) {
+        startOffscreen();
+        return;
     }
 
-    if (now >= nextDirectionChange && x >= 0 && x <= SCREEN_WIDTH - FISH_WIDTH) {
-        chooseDirection();
-        nextDirectionChange = now + random(2500, 6000);
+    if (isFullyVisible() && now >= nextPause) {
+        startPause();
+        return;
     }
 
     if (now - lastBubble >= BUBBLE_INTERVAL) {
@@ -99,12 +121,10 @@ void PetIdle::updateFish() {
 }
 
 void PetIdle::updateBubbles() {
-    static unsigned long lastUpdate = 0;
-
     const unsigned long now = millis();
 
-    if (now - lastUpdate < 100) return;
-    lastUpdate = now;
+    if (now - lastBubbleMove < BUBBLE_MOVE_INTERVAL) return;
+    lastBubbleMove = now;
 
     for (Bubble& bubble : bubbles) {
         if (!bubble.active) continue;
@@ -122,12 +142,27 @@ void PetIdle::spawnBubble() {
         bubble.x = direction > 0 ? x : x + FISH_WIDTH;
         bubble.y = y + (FISH_HEIGHT / 2) + random(-4, 5);
         bubble.active = true;
+
         return;
     }
 }
 
-void PetIdle::chooseDirection() {
-    direction = random(0, 2) == 0 ? -1 : 1;
+void PetIdle::startSwimming() {
+    const unsigned long now = millis();
+
+    idleState = IdleState::SWIMMING;
+    lastMove = now;
+    nextPause = now + random(2500, 6000);
+}
+
+void PetIdle::startPause() {
+    idleState = IdleState::PAUSED;
+    stateUntil = millis() + random(500, 2000);
+}
+
+void PetIdle::startOffscreen() {
+    idleState = IdleState::OFFSCREEN;
+    stateUntil = millis() + random(1000, 4000);
 }
 
 void PetIdle::resetFromOutside() {
@@ -135,6 +170,15 @@ void PetIdle::resetFromOutside() {
 
     if (direction > 0) x = -FISH_WIDTH;
     else x = SCREEN_WIDTH;
+}
+
+bool PetIdle::isFullyOffscreen() const {
+    if (direction > 0) return x > SCREEN_WIDTH;
+    return x < -FISH_WIDTH;
+}
+
+bool PetIdle::isFullyVisible() const {
+    return x >= 0 && x <= SCREEN_WIDTH - FISH_WIDTH;
 }
 
 const Bitmap& PetIdle::getFishBitmap() const {
