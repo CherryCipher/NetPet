@@ -77,6 +77,7 @@ private:
     void startPause();
     void startOffscreen();
     void resetFromOutside();
+    void moveToSleepPosition();
 
     bool isFullyOffscreen() const;
     bool isFullyVisible() const;

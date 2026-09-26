@@ -49,7 +49,7 @@ void PetIdle::draw() const {
         );
     }
 
-    if (sleeping && idleState != IdleState::OFFSCREEN) {
+    if (sleeping) {
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
 
@@ -62,7 +62,13 @@ void PetIdle::draw() const {
 }
 
 void PetIdle::sleep() {
+    if (sleeping) return;
+
     sleeping = true;
+
+    moveToSleepPosition();
+
+    for (Bubble& bubble : bubbles) bubble.active = false;
 }
 
 void PetIdle::wake() {
@@ -74,8 +80,9 @@ void PetIdle::wake() {
 
     lastMove = now;
     lastBubble = now;
+    lastBubbleMove = now;
 
-    if (idleState == IdleState::PAUSED) startSwimming();
+    startSwimming();
 }
 
 void PetIdle::setSick(bool sick) {
@@ -170,6 +177,13 @@ void PetIdle::resetFromOutside() {
 
     if (direction > 0) x = -FISH_WIDTH;
     else x = SCREEN_WIDTH;
+}
+
+void PetIdle::moveToSleepPosition() {
+    idleState = IdleState::PAUSED;
+
+    x = (SCREEN_WIDTH - FISH_WIDTH) / 2;
+    y = WORLD_BOTTOM - FISH_HEIGHT;
 }
 
 bool PetIdle::isFullyOffscreen() const {
