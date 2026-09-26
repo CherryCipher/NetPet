@@ -113,18 +113,6 @@ void WiFiScreen::scan() {
     selectedIndex = 0;
     scrollOffset = 0;
 
-    display.clearDisplay();
-    display.setTextColor(SSD1306_WHITE);
-    display.setTextSize(1);
-
-    display.setCursor(4, 20);
-    display.print("SEARCHING FOR FOOD");
-
-    display.setCursor(32, 38);
-    display.print("PLEASE WAIT");
-
-    display.display();
-
     if (!wifi.scanNetworks()) {
         state = State::ERROR;
         return;
