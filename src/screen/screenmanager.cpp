@@ -1,4 +1,5 @@
 #include "screenmanager.h"
+#include "../config/gameconfig.h"
 
 ScreenManager::ScreenManager(
     Adafruit_SSD1306& display,
@@ -85,7 +86,7 @@ void ScreenManager::updatePet() {
 
     if (input.anyPressed()) pet.activity();
 
-    petIdle.setSick(pet.getEnergy() <= 25);
+    petIdle.setSick(pet.getEnergy() <= GameConfig::SICK_ENERGY);
 
     if (pet.getState() == PetState::SLEEP) petIdle.sleep();
     else petIdle.wake();
@@ -143,28 +144,49 @@ void ScreenManager::drawPet() {
 }
 
 void ScreenManager::drawStatus() {
-    const unsigned long uptimeSeconds = progression.getUptime() / 1000;
+    const uint8_t energy = petData.energy;
+    const uint32_t xp = progression.getXp();
+    const uint8_t level = progression.getLevel();
+    const float multiplier = progression.getUptimeMultiplier();
 
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
 
+    // Energy bar
     display.setCursor(0, 0);
-    display.print("E:");
-    display.print(petData.energy);
+    display.print("E");
+
+    constexpr int16_t barX = 10;
+    constexpr int16_t barY = 1;
+    constexpr int16_t barWidth = 45;
+    constexpr int16_t barHeight = 6;
+
+    display.drawRect(barX, barY, barWidth, barHeight, SSD1306_WHITE);
+
+    const int16_t fillWidth = ((barWidth - 2) * energy) / GameConfig::MAX_ENERGY;
+    if (fillWidth > 0) display.fillRect(barX + 1, barY + 1, fillWidth, barHeight - 2, SSD1306_WHITE);
+
+    display.setCursor(59, 0);
+    display.print(energy);
     display.print("%");
 
-    display.setCursor(58, 0);
-    display.print("LV:");
-    display.print(progression.getLevel());
-
+    // Level
     display.setCursor(0, 8);
-    display.print("UP:");
-    display.print(uptimeSeconds);
-    display.print("s");
+    display.print("LV");
+    display.print(level);
 
-    display.setCursor(58, 8);
+    // XP
+    display.setCursor(30, 8);
+    display.print("XP");
+    display.print(xp);
+
+    // Uptime multiplier
+    display.setCursor(92, 8);
     display.print("x");
-    display.print(progression.getUptimeMultiplier(), 2);
+    display.print(multiplier, 1);
+
+    // Separate HUD from pet area
+    display.drawFastHLine(0, 15, 128, SSD1306_WHITE);
 }
 
 void ScreenManager::drawMenu() {
