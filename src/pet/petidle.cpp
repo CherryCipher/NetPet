@@ -6,6 +6,8 @@ void PetIdle::begin() {
     sleeping = false;
     sick = false;
 
+    swimFrame = 0;
+
     y = WORLD_TOP + ((WORLD_BOTTOM - WORLD_TOP - FISH_HEIGHT) / 2);
 
     for (Bubble& bubble : bubbles) bubble.active = false;
@@ -15,6 +17,7 @@ void PetIdle::begin() {
     const unsigned long now = millis();
 
     lastMove = now;
+    lastSwimFrame = now;
     lastBubble = now;
     lastBubbleMove = now;
 
@@ -28,6 +31,7 @@ void PetIdle::update() {
     if (sleeping) return;
 
     updateFish();
+    updateSwimAnimation();
 }
 
 void PetIdle::draw() const {
@@ -65,6 +69,7 @@ void PetIdle::sleep() {
     if (sleeping) return;
 
     sleeping = true;
+    swimFrame = 0;
 
     moveToSleepPosition();
 
@@ -75,10 +80,12 @@ void PetIdle::wake() {
     if (!sleeping) return;
 
     sleeping = false;
+    swimFrame = 0;
 
     const unsigned long now = millis();
 
     lastMove = now;
+    lastSwimFrame = now;
     lastBubble = now;
     lastBubbleMove = now;
 
@@ -127,6 +134,18 @@ void PetIdle::updateFish() {
     }
 }
 
+void PetIdle::updateSwimAnimation() {
+    if (idleState != IdleState::SWIMMING) return;
+    if (sick) return;
+
+    const unsigned long now = millis();
+
+    if (now - lastSwimFrame < SWIM_FRAME_INTERVAL) return;
+
+    lastSwimFrame = now;
+    swimFrame = (swimFrame + 1) % SWIM_FRAME_COUNT;
+}
+
 void PetIdle::updateBubbles() {
     const unsigned long now = millis();
 
@@ -158,7 +177,10 @@ void PetIdle::startSwimming() {
     const unsigned long now = millis();
 
     idleState = IdleState::SWIMMING;
+
     lastMove = now;
+    lastSwimFrame = now;
+
     nextPause = now + random(2500, 6000);
 }
 
@@ -175,6 +197,8 @@ void PetIdle::startOffscreen() {
 void PetIdle::resetFromOutside() {
     direction = random(0, 2) == 0 ? -1 : 1;
 
+    swimFrame = 0;
+
     if (direction > 0) x = -FISH_WIDTH;
     else x = SCREEN_WIDTH;
 }
@@ -188,6 +212,7 @@ void PetIdle::moveToSleepPosition() {
 
 bool PetIdle::isFullyOffscreen() const {
     if (direction > 0) return x > SCREEN_WIDTH;
+
     return x < -FISH_WIDTH;
 }
 
@@ -199,5 +224,21 @@ const Bitmap& PetIdle::getFishBitmap() const {
     if (sleeping) return direction > 0 ? FRAME_FISH_SLEEP_RIGHT : FRAME_FISH_SLEEP_LEFT;
     if (sick) return direction > 0 ? FRAME_FISH_SICK_RIGHT : FRAME_FISH_SICK_LEFT;
 
-    return direction > 0 ? FRAME_FISH_RIGHT : FRAME_FISH_LEFT;
+    return getSwimBitmap();
+}
+
+const Bitmap& PetIdle::getSwimBitmap() const {
+    if (direction > 0) {
+        switch (swimFrame) {
+            case 0: return FRAME_FISH_RIGHT;
+            case 1: return FRAME_FISH_RIGHT1;
+            default: return FRAME_FISH_RIGHT;
+        }
+    }
+
+    switch (swimFrame) {
+        case 0: return FRAME_FISH_LEFT;
+        case 1: return FRAME_FISH_LEFT1;
+        default: return FRAME_FISH_LEFT;
+    }
 }

@@ -40,7 +40,7 @@ bool BLEScreen::update() {
 
         case State::EAT_RESULT:
             if (millis() - stateStartedAt >= EAT_RESULT_DURATION) {
-                if (newLevel > previousLevel) startLevelUp();
+                if (levelUpPending) startLevelUp();
                 else finishFlow();
             }
             return false;
@@ -87,37 +87,14 @@ bool BLEScreen::update() {
 
 void BLEScreen::draw() {
     switch (state) {
-        case State::SCANNING:
-            drawScanning();
-            break;
-
-        case State::LIST:
-            drawList();
-            break;
-
-        case State::EMPTY:
-            drawEmpty();
-            break;
-
-        case State::ERROR:
-            drawError();
-            break;
-
-        case State::EATING:
-            drawEating();
-            break;
-
-        case State::EAT_RESULT:
-            drawEatResult();
-            break;
-
-        case State::LEVEL_UP:
-            drawLevelUp();
-            break;
-
-        case State::LEVEL_UP_RESULT:
-            drawLevelUpResult();
-            break;
+        case State::SCANNING: drawScanning(); break;
+        case State::LIST: drawList(); break;
+        case State::EMPTY: drawEmpty(); break;
+        case State::ERROR: drawError(); break;
+        case State::EATING: drawEating(); break;
+        case State::EAT_RESULT: drawEatResult(); break;
+        case State::LEVEL_UP: drawLevelUp(); break;
+        case State::LEVEL_UP_RESULT: drawLevelUpResult(); break;
     }
 }
 
@@ -196,7 +173,9 @@ void BLEScreen::startEating() {
     pet.pauseEnergyDecay();
 
     eatResult = food.eatBLE(device.address, device.rssi);
+
     newLevel = progression.getLevel();
+    levelUpPending = newLevel > previousLevel;
 
     Serial.print("BLE eaten: ");
     Serial.print(eatenName);
@@ -207,7 +186,9 @@ void BLEScreen::startEating() {
     Serial.print(" | Level ");
     Serial.print(previousLevel);
     Serial.print(" -> ");
-    Serial.println(newLevel);
+    Serial.print(newLevel);
+    Serial.print(" | Level up: ");
+    Serial.println(levelUpPending ? "YES" : "NO");
 
     animator.play(ANIMATION_EAT_BLE, true);
     state = State::EATING;
@@ -219,17 +200,22 @@ void BLEScreen::finishEating() {
 }
 
 void BLEScreen::startLevelUp() {
-    Serial.print("Level up! ");
+    Serial.print("Starting level-up sequence: ");
     Serial.print(previousLevel);
     Serial.print(" -> ");
     Serial.println(newLevel);
 
     animator.play(ANIMATION_LEVEL_UP, true);
+
+    stateStartedAt = millis();
     state = State::LEVEL_UP;
 }
 
 void BLEScreen::finishFlow() {
     pet.resumeEnergyDecay();
+
+    levelUpPending = false;
+
     rebuildDeviceList();
 }
 
@@ -255,7 +241,6 @@ void BLEScreen::drawList() {
 
     display.setCursor(0, 0);
     display.print("BLE FOOD ");
-
     display.print(selectedIndex + 1);
     display.print("/");
     display.print(deviceCount);

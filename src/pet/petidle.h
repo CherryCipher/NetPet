@@ -3,13 +3,15 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+
+#include "../animation/animation.h"
 #include "../assets/frames.h"
 
 /**
- * @brief Controls the visual behavior of the pet on the idle screen.
+ * @brief Controls the NetPet idle world.
  *
- * PetIdle only handles movement and rendering. It does not manage
- * gameplay state such as energy, XP or progression.
+ * Handles fish movement, swimming animation, pauses, sleeping and bubbles.
+ * Rendering is written only to the display buffer.
  */
 class PetIdle {
 public:
@@ -24,19 +26,21 @@ public:
     void setSick(bool sick);
 
 private:
-    static constexpr int SCREEN_WIDTH = 128;
+    static constexpr int16_t SCREEN_WIDTH = 128;
 
-    static constexpr int WORLD_TOP = 16;
-    static constexpr int WORLD_BOTTOM = 64;
+    static constexpr int16_t WORLD_TOP = 16;
+    static constexpr int16_t WORLD_BOTTOM = 64;
 
-    static constexpr int FISH_WIDTH = 36;
-    static constexpr int FISH_HEIGHT = 36;
+    static constexpr int16_t FISH_WIDTH = 36;
+    static constexpr int16_t FISH_HEIGHT = 36;
 
-    static constexpr unsigned long MOVE_INTERVAL = 35;
+    static constexpr unsigned long MOVE_INTERVAL = 70;
+    static constexpr unsigned long SWIM_FRAME_INTERVAL = 180;
     static constexpr unsigned long BUBBLE_INTERVAL = 900;
-    static constexpr unsigned long BUBBLE_MOVE_INTERVAL = 100;
+    static constexpr unsigned long BUBBLE_MOVE_INTERVAL = 120;
 
-    static constexpr uint8_t BUBBLE_COUNT = 4;
+    static constexpr uint8_t SWIM_FRAME_COUNT = 3;
+    static constexpr uint8_t MAX_BUBBLES = 4;
 
     enum class IdleState : uint8_t {
         SWIMMING,
@@ -61,21 +65,27 @@ private:
 
     IdleState idleState = IdleState::SWIMMING;
 
+    uint8_t swimFrame = 0;
+
     unsigned long lastMove = 0;
+    unsigned long lastSwimFrame = 0;
     unsigned long lastBubble = 0;
     unsigned long lastBubbleMove = 0;
-    unsigned long stateUntil = 0;
-    unsigned long nextPause = 0;
 
-    Bubble bubbles[BUBBLE_COUNT];
+    unsigned long nextPause = 0;
+    unsigned long stateUntil = 0;
+
+    Bubble bubbles[MAX_BUBBLES];
 
     void updateFish();
+    void updateSwimAnimation();
     void updateBubbles();
     void spawnBubble();
 
     void startSwimming();
     void startPause();
     void startOffscreen();
+
     void resetFromOutside();
     void moveToSleepPosition();
 
@@ -83,4 +93,5 @@ private:
     bool isFullyVisible() const;
 
     const Bitmap& getFishBitmap() const;
+    const Bitmap& getSwimBitmap() const;
 };

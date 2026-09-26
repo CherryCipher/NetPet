@@ -70,6 +70,7 @@ private:
 
     uint16_t previousLevel = 1;
     uint16_t newLevel = 1;
+    bool levelUpPending = false;
 
     unsigned long stateStartedAt = 0;
 

@@ -14,9 +14,6 @@
 
 /**
  * @brief Controls the Wi-Fi food hunting and eating flow.
- *
- * Handles scanning, selecting food, eating animations, rewards and
- * level-up feedback.
  */
 class WiFiScreen {
 public:
@@ -38,10 +35,12 @@ private:
     static constexpr uint8_t MAX_NETWORKS = 30;
     static constexpr uint8_t MAX_VISIBLE_ITEMS = 4;
 
+    static constexpr unsigned long SCAN_START_DELAY = 100;
     static constexpr unsigned long EAT_RESULT_DURATION = 1800;
     static constexpr unsigned long LEVEL_RESULT_DURATION = 1800;
 
     enum class State : uint8_t {
+        SCANNING,
         LIST,
         EMPTY,
         ERROR,
@@ -71,10 +70,12 @@ private:
 
     uint16_t previousLevel = 1;
     uint16_t newLevel = 1;
+    bool levelUpPending = false;
 
     unsigned long stateStartedAt = 0;
 
-    void scan();
+    void startScan();
+    void performScan();
     void rebuildNetworkList();
 
     void moveUp();
@@ -85,6 +86,7 @@ private:
     void startLevelUp();
     void finishFlow();
 
+    void drawScanning();
     void drawList();
     void drawEmpty();
     void drawError();

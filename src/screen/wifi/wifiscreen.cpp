@@ -18,20 +18,22 @@ WiFiScreen::WiFiScreen(
       animator(animator) {}
 
 void WiFiScreen::begin() {
-    selectedIndex = 0;
-    scrollOffset = 0;
-    scan();
+    startScan();
 }
 
 bool WiFiScreen::update() {
     switch (state) {
+        case State::SCANNING:
+            if (millis() - stateStartedAt >= SCAN_START_DELAY) performScan();
+            return false;
+
         case State::EATING:
             if (animator.isFinished()) finishEating();
             return false;
 
         case State::EAT_RESULT:
             if (millis() - stateStartedAt >= EAT_RESULT_DURATION) {
-                if (newLevel > previousLevel) startLevelUp();
+                if (levelUpPending) startLevelUp();
                 else finishFlow();
             }
             return false;
@@ -54,7 +56,7 @@ bool WiFiScreen::update() {
     if (input.wasPressed(Button::K4)) return true;
 
     if (state != State::LIST) {
-        if (input.wasPressed(Button::K3)) scan();
+        if (input.wasPressed(Button::K3)) startScan();
         return false;
     }
 
@@ -78,41 +80,27 @@ bool WiFiScreen::update() {
 
 void WiFiScreen::draw() {
     switch (state) {
-        case State::LIST:
-            drawList();
-            break;
-
-        case State::EMPTY:
-            drawEmpty();
-            break;
-
-        case State::ERROR:
-            drawError();
-            break;
-
-        case State::EATING:
-            drawEating();
-            break;
-
-        case State::EAT_RESULT:
-            drawEatResult();
-            break;
-
-        case State::LEVEL_UP:
-            drawLevelUp();
-            break;
-
-        case State::LEVEL_UP_RESULT:
-            drawLevelUpResult();
-            break;
+        case State::SCANNING: drawScanning(); break;
+        case State::LIST: drawList(); break;
+        case State::EMPTY: drawEmpty(); break;
+        case State::ERROR: drawError(); break;
+        case State::EATING: drawEating(); break;
+        case State::EAT_RESULT: drawEatResult(); break;
+        case State::LEVEL_UP: drawLevelUp(); break;
+        case State::LEVEL_UP_RESULT: drawLevelUpResult(); break;
     }
 }
 
-void WiFiScreen::scan() {
+void WiFiScreen::startScan() {
     networkCount = 0;
     selectedIndex = 0;
     scrollOffset = 0;
 
+    stateStartedAt = millis();
+    state = State::SCANNING;
+}
+
+void WiFiScreen::performScan() {
     if (!wifi.scanNetworks()) {
         state = State::ERROR;
         return;
@@ -177,7 +165,9 @@ void WiFiScreen::startEating() {
     pet.pauseEnergyDecay();
 
     eatResult = food.eatWiFi(network.bssid, network.rssi);
+
     newLevel = progression.getLevel();
+    levelUpPending = newLevel > previousLevel;
 
     Serial.print("WiFi eaten: ");
     Serial.print(eatenName);
@@ -186,7 +176,9 @@ void WiFiScreen::startEating() {
     Serial.print(" | Level ");
     Serial.print(previousLevel);
     Serial.print(" -> ");
-    Serial.println(newLevel);
+    Serial.print(newLevel);
+    Serial.print(" | Level up: ");
+    Serial.println(levelUpPending ? "YES" : "NO");
 
     animator.play(ANIMATION_EAT_WIFI, true);
     state = State::EATING;
@@ -198,18 +190,37 @@ void WiFiScreen::finishEating() {
 }
 
 void WiFiScreen::startLevelUp() {
-    Serial.print("Level up! ");
+    Serial.print("Starting level-up sequence: ");
     Serial.print(previousLevel);
     Serial.print(" -> ");
     Serial.println(newLevel);
 
     animator.play(ANIMATION_LEVEL_UP, true);
+
+    stateStartedAt = millis();
     state = State::LEVEL_UP;
 }
 
 void WiFiScreen::finishFlow() {
     pet.resumeEnergyDecay();
+
+    levelUpPending = false;
+
     rebuildNetworkList();
+}
+
+void WiFiScreen::drawScanning() {
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(4, 14);
+    display.print("SEARCHING FOR FOOD");
+
+    display.setCursor(24, 30);
+    display.print("WIFI SCANNING");
+
+    display.setCursor(52, 46);
+    display.print("...");
 }
 
 void WiFiScreen::drawList() {
@@ -218,14 +229,12 @@ void WiFiScreen::drawList() {
 
     display.setCursor(0, 0);
     display.print("WIFI FOOD ");
-
     display.print(selectedIndex + 1);
     display.print("/");
     display.print(networkCount);
 
     for (uint8_t row = 0; row < MAX_VISIBLE_ITEMS; row++) {
         const uint8_t listIndex = scrollOffset + row;
-
         if (listIndex >= networkCount) break;
 
         const WiFiNetwork& network = wifi.getNetwork(networkIndices[listIndex]);
