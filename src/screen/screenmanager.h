@@ -3,10 +3,10 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
 #include "../animation/animationmanager.h"
 #include "../input/inputmanager.h"
 #include "../pet/petmanager.h"
+#include "../pet/petidle.h"
 #include "../pet/petdata.h"
 #include "../pet/progressionmanager.h"
 #include "wifi/wifiscreen.h"
@@ -26,6 +26,7 @@ public:
         Adafruit_SSD1306& display,
         InputManager& input,
         PetManager& pet,
+        PetIdle& petIdle,
         AnimationManager& animator,
         PetData& petData,
         ProgressionManager& progression,
@@ -46,6 +47,7 @@ private:
     Adafruit_SSD1306& display;
     InputManager& input;
     PetManager& pet;
+    PetIdle& petIdle;
     AnimationManager& animator;
     PetData& petData;
     ProgressionManager& progression;
@@ -65,6 +67,5 @@ private:
     void drawMenu();
     void drawStats();
     void drawStatus();
-
     void selectMenuItem();
 };

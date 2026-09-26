@@ -9,8 +9,7 @@ void PetManager::begin() {
 
     sleepEnabled = true;
     energyDecayPaused = false;
-
-    setState(PetState::IDLE);
+    state = PetState::IDLE;
 }
 
 void PetManager::update() {
@@ -57,7 +56,6 @@ void PetManager::addEnergy(uint8_t amount) {
 
 void PetManager::pauseEnergyDecay() {
     if (energyDecayPaused) return;
-
     energyDecayPaused = true;
 }
 
@@ -82,9 +80,7 @@ void PetManager::enterPetScreen() {
 
     sleepEnabled = true;
     lastActivity = millis();
-
     state = PetState::IDLE;
-    //animator.play(ANIMATION_IDLE, true);
 }
 
 uint8_t PetManager::getEnergy() const {
@@ -136,7 +132,6 @@ void PetManager::resetPet() {
 
     data = PetData();
     storage.save(data);
-
     progression.resetSession();
 
     lastActivity = millis();
@@ -149,25 +144,21 @@ void PetManager::resetPet() {
 }
 
 void PetManager::setState(PetState newState) {
-    if (state == newState && animator.isPlaying()) return;
+    if (state == newState) return;
 
     state = newState;
 
-    /* switch (state) {
+    switch (state) {
         case PetState::IDLE:
-            animator.play(ANIMATION_IDLE, true);
-            break;
-
         case PetState::SLEEP:
-            animator.play(ANIMATION_SLEEP, true);
             break;
 
-        case PetState::CONNECTING:
+/*         case PetState::CONNECTING:
             animator.play(ANIMATION_CONNECT, true);
             break;
 
         case PetState::DEAD:
             animator.play(ANIMATION_DEATH, true);
-            break;
-    } */
+            break; */
+    }
 }

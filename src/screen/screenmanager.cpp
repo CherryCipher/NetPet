@@ -4,6 +4,7 @@ ScreenManager::ScreenManager(
     Adafruit_SSD1306& display,
     InputManager& input,
     PetManager& pet,
+    PetIdle& petIdle,
     AnimationManager& animator,
     PetData& petData,
     ProgressionManager& progression,
@@ -13,6 +14,7 @@ ScreenManager::ScreenManager(
     : display(display),
       input(input),
       pet(pet),
+      petIdle(petIdle),
       animator(animator),
       petData(petData),
       progression(progression),
@@ -22,6 +24,7 @@ ScreenManager::ScreenManager(
 void ScreenManager::begin() {
     currentScreen = ScreenId::PET;
     pet.enterPetScreen();
+    petIdle.begin();
 }
 
 void ScreenManager::update() {
@@ -60,6 +63,7 @@ void ScreenManager::show(ScreenId screen) {
 
     if (currentScreen == ScreenId::PET) {
         pet.enterPetScreen();
+        petIdle.begin();
         return;
     }
 
@@ -80,6 +84,11 @@ void ScreenManager::updatePet() {
     }
 
     if (input.anyPressed()) pet.activity();
+
+    if (pet.getState() == PetState::SLEEP) petIdle.sleep();
+    else petIdle.wake();
+
+    if (pet.getState() == PetState::IDLE || pet.getState() == PetState::SLEEP) petIdle.update();
 }
 
 void ScreenManager::updateMenu() {
@@ -122,8 +131,13 @@ void ScreenManager::selectMenuItem() {
 }
 
 void ScreenManager::drawPet() {
+    if (pet.getState() == PetState::CONNECTING || pet.getState() == PetState::DEAD) {
+        animator.draw();
+        return;
+    }
+
     drawStatus();
-    animator.draw();
+    petIdle.draw();
 }
 
 void ScreenManager::drawStatus() {
@@ -199,7 +213,6 @@ void ScreenManager::drawStats() {
     if (hours < 10) display.print("0");
     display.print(hours);
     display.print(":");
-
     if (minutes < 10) display.print("0");
     display.print(minutes);
 

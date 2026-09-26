@@ -11,6 +11,7 @@
 #include "input/inputmanager.h"
 #include "pet/foodmanager.h"
 #include "pet/petdata.h"
+#include "pet/petidle.h"
 #include "pet/petmanager.h"
 #include "pet/progressionmanager.h"
 #include "screen/screenmanager.h"
@@ -40,7 +41,9 @@ PetData petData;
 PetStorage petStorage;
 
 AnimationManager animator(display);
+PetIdle petIdle(display);
 InputManager input(BTN_K1, BTN_K2, BTN_K3, BTN_K4);
+
 ProgressionManager progression(petData);
 PetManager pet(animator, petData, petStorage, progression);
 FoodManager food(petData, pet, progression, petStorage);
@@ -52,6 +55,7 @@ ScreenManager screens(
     display,
     input,
     pet,
+    petIdle,
     animator,
     petData,
     progression,

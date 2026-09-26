@@ -44,7 +44,7 @@ def image_to_bitmap(image: Image.Image) -> list[int]:
                 pixel = image.getpixel((x, y))
 
                 # Dark PNG pixels become active OLED pixels.
-                if pixel < THRESHOLD:
+                if pixel >= THRESHOLD:
                     value |= 1 << (7 - bit)
 
             bitmap.append(value)

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-
 #include "../animation/animationmanager.h"
 #include "../assets/animations.h"
 #include "../config/gameconfig.h"
@@ -24,7 +23,6 @@ public:
     void update();
     void activity();
     void connect();
-
     void addEnergy(uint8_t amount);
 
     void pauseEnergyDecay();
