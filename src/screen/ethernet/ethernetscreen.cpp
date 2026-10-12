@@ -1,25 +1,98 @@
 #include "ethernetscreen.h"
 
-EthernetScreen::EthernetScreen(Adafruit_SSD1306& display, EthernetManager& ethernet)
-    : display(display), ethernet(ethernet) {}
+EthernetScreen::EthernetScreen(
+    Adafruit_SSD1306& display,
+    EthernetManager& ethernet,
+    AnimationManager& animator
+)
+    : display(display),
+      ethernet(ethernet),
+      animator(animator) {}
 
-void EthernetScreen::showFood(const EatResult& result, const String& gatewayMAC, bool levelUp, uint16_t level) {
+void EthernetScreen::update() {
+    switch (state) {
+        case State::CONNECTING:
+            if (animator.isFinished()) finishConnecting();
+            break;
+
+        case State::EATING:
+            if (animator.isFinished()) finishEating();
+            break;
+
+        case State::RESULT:
+            if (millis() - startedAt >= DISPLAY_DURATION) finishResult();
+            break;
+
+        case State::IDLE:
+            break;
+    }
+}
+
+void EthernetScreen::draw() {
+    switch (state) {
+        case State::CONNECTING:
+        case State::EATING:
+            animator.draw();
+            break;
+
+        case State::RESULT:
+            drawResult();
+            break;
+
+        case State::IDLE:
+            break;
+    }
+}
+
+void EthernetScreen::startConnecting() {
+    if (state != State::IDLE) return;
+
+    Serial.println("[ETH SCREEN] Playing connect animation.");
+
+    animator.play(ANIMATION_CONNECT_ETH, true);
+    state = State::CONNECTING;
+}
+
+void EthernetScreen::startEating(const EatResult& result, const String& gatewayMAC, bool levelUp, uint16_t level) {
     this->result = result;
     this->gatewayMAC = gatewayMAC;
     this->levelUp = levelUp;
     this->level = level;
 
+    Serial.println("[ETH SCREEN] Playing eat animation.");
+
+    animator.play(ANIMATION_EAT_ETH, true);
+    state = State::EATING;
+}
+
+bool EthernetScreen::isActive() const {
+    return state != State::IDLE;
+}
+
+bool EthernetScreen::isConnecting() const {
+    return state == State::CONNECTING;
+}
+
+void EthernetScreen::finishConnecting() {
+    Serial.println("[ETH SCREEN] Connect animation finished.");
+
+    state = State::IDLE;
+}
+
+void EthernetScreen::finishEating() {
+    Serial.println("[ETH SCREEN] Eat animation finished.");
+
     startedAt = millis();
-    active = true;
+    state = State::RESULT;
 }
 
-void EthernetScreen::update() {
-    if (!active) return;
+void EthernetScreen::finishResult() {
+    Serial.println("[ETH SCREEN] Ethernet result finished.");
 
-    if (millis() - startedAt >= DISPLAY_DURATION) active = false;
+    state = State::IDLE;
 }
 
-void EthernetScreen::draw() {
+void EthernetScreen::drawResult() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
 
@@ -53,8 +126,4 @@ void EthernetScreen::draw() {
     } else {
         display.print("GATEWAY DISCOVERED");
     }
-}
-
-bool EthernetScreen::isActive() const {
-    return active;
 }

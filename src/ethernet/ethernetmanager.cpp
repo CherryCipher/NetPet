@@ -37,7 +37,6 @@ bool EthernetManager::begin() {
     Serial.println(formatMAC(mac));
 
     linkUp = Ethernet.linkStatus() == LinkON;
-
     state = State::DISCONNECTED;
 
     if (linkUp) handleLinkUp();
@@ -56,9 +55,11 @@ void EthernetManager::update() {
 
         if (result == 1 || result == 3) {
             Serial.println("[ETH] DHCP renewal failed.");
+
             connected = false;
-            gatewayMAC = "";
             gatewayEvent = false;
+            gatewayMAC = "";
+
             state = State::NO_DHCP;
             lastDhcpAttempt = now;
         }
@@ -83,9 +84,24 @@ void EthernetManager::update() {
     if (now - lastDhcpAttempt >= DHCP_RETRY_INTERVAL) requestDHCP();
 }
 
-bool EthernetManager::isAvailable() const { return available; }
-bool EthernetManager::isLinkUp() const { return linkUp; }
-bool EthernetManager::isConnected() const { return connected; }
+bool EthernetManager::isAvailable() const {
+    return available;
+}
+
+bool EthernetManager::isLinkUp() const {
+    return linkUp;
+}
+
+bool EthernetManager::isConnected() const {
+    return connected;
+}
+
+bool EthernetManager::hasLinkUpEvent() {
+    if (!linkUpEvent) return false;
+
+    linkUpEvent = false;
+    return true;
+}
 
 bool EthernetManager::hasNewGateway() {
     if (!gatewayEvent) return false;
@@ -126,6 +142,7 @@ void EthernetManager::handleLinkUp() {
     Serial.println("[ETH] Cable connected.");
 
     connected = false;
+    linkUpEvent = true;
     gatewayEvent = false;
     gatewayMAC = "";
 
@@ -136,6 +153,7 @@ void EthernetManager::handleLinkDown() {
     Serial.println("[ETH] Cable disconnected.");
 
     connected = false;
+    linkUpEvent = false;
     gatewayEvent = false;
     gatewayMAC = "";
 
@@ -165,6 +183,7 @@ bool EthernetManager::requestDHCP() {
 
     if (!resolveGatewayMAC()) {
         state = State::NO_GATEWAY;
+
         Serial.println("[ETH] Gateway MAC resolution failed.");
         return true;
     }
@@ -184,13 +203,9 @@ bool EthernetManager::resolveGatewayMAC() {
     if (gateway == IPAddress(0, 0, 0, 0)) return false;
 
     /*
-     * The W5500 resolves destination MAC addresses using ARP.
-     * Sending a UDP packet to the gateway triggers ARP resolution.
-     *
-     * We use a temporary UDP socket and read its destination
-     * hardware address register after transmission.
+     * Sending a UDP packet to the gateway causes the W5500
+     * to resolve the destination MAC address through ARP.
      */
-
     class GatewayUDP : public EthernetUDP {
     public:
         uint8_t socketNumber() const { return sockindex; }
@@ -240,6 +255,7 @@ bool EthernetManager::resolveGatewayMAC() {
     if (!valid || broadcast || (resolvedMAC[0] & 0x01)) return false;
 
     gatewayMAC = formatMAC(resolvedMAC);
+
     return true;
 }
 
@@ -250,8 +266,12 @@ String EthernetManager::formatMAC(const uint8_t* address) const {
         buffer,
         sizeof(buffer),
         "%02X:%02X:%02X:%02X:%02X:%02X",
-        address[0], address[1], address[2],
-        address[3], address[4], address[5]
+        address[0],
+        address[1],
+        address[2],
+        address[3],
+        address[4],
+        address[5]
     );
 
     return String(buffer);

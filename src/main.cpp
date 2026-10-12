@@ -57,7 +57,7 @@ FoodManager food(petData, pet, progression, petStorage);
 
 WiFiScreen wifiScreen(display, input, wifi, food, pet, progression, animator);
 BLEScreen bleScreen(display, input, ble, food, pet, progression, animator);
-EthernetScreen ethernetScreen(display, ethernet);
+EthernetScreen ethernetScreen(display, ethernet, animator);
 
 ScreenManager screens(
     display,
@@ -71,6 +71,12 @@ ScreenManager screens(
     bleScreen,
     ethernetScreen
 );
+
+bool ethernetFoodPending = false;
+String pendingGatewayMAC;
+EatResult pendingEthernetResult;
+bool pendingEthernetLevelUp = false;
+uint16_t pendingEthernetLevel = 1;
 
 /**
  * @brief Performs a complete factory reset when GPIO8 is held during boot.
@@ -103,7 +109,7 @@ void checkFactoryReset() {
         const uint8_t progress = ((millis() - startedAt) * 100) / FACTORY_RESET_DURATION;
 
         display.drawRect(12, 48, 104, 8, SSD1306_WHITE);
-        display.fillRect(14, 50, (100 * progress) / 100, 4, SSD1306_WHITE);
+        display.fillRect(14, 50, progress, 4, SSD1306_WHITE);
 
         display.display();
 
@@ -113,6 +119,7 @@ void checkFactoryReset() {
     Serial.println("[RESET] Clearing NetPet save.");
 
     petStorage.clear();
+
     petData = PetData();
     petStorage.save(petData);
 
@@ -131,43 +138,75 @@ void checkFactoryReset() {
 }
 
 /**
- * @brief Handles newly discovered Ethernet gateways.
+ * @brief Handles Ethernet connection and food events.
+ *
+ * A physical Ethernet link first starts the connection animation.
+ * If DHCP later discovers a new gateway, the food event is queued
+ * until the connection animation has finished.
  */
 void handleEthernetFood() {
-    if (!ethernet.hasNewGateway()) return;
+    if (ethernet.hasLinkUpEvent()) {
+        Serial.println("[NETPET] Ethernet cable detected.");
 
-    if (pet.getState() == PetState::DEAD) return;
-
-    const String gatewayMAC = ethernet.getGatewayMAC();
-
-    if (gatewayMAC.isEmpty()) return;
-
-    Serial.print("[NETPET] Gateway discovered: ");
-    Serial.println(gatewayMAC);
-
-    if (food.isEthernetEaten(gatewayMAC)) {
-        Serial.println("[NETPET] Gateway already eaten.");
-        return;
+        if (pet.getState() != PetState::DEAD) {
+            pet.activity();
+            ethernetScreen.startConnecting();
+        }
     }
 
-    const uint16_t previousLevel = progression.getLevel();
+    if (ethernet.hasNewGateway()) {
+        if (pet.getState() == PetState::DEAD) return;
 
-    const EatResult result = food.eatEthernet(gatewayMAC);
+        const String gatewayMAC = ethernet.getGatewayMAC();
 
-    if (result.finalXp == 0) return;
+        if (gatewayMAC.isEmpty()) return;
 
-    const uint16_t newLevel = progression.getLevel();
-    const bool levelUp = newLevel > previousLevel;
+        Serial.print("[NETPET] Gateway discovered: ");
+        Serial.println(gatewayMAC);
 
-    pet.activity();
+        if (food.isEthernetEaten(gatewayMAC)) {
+            Serial.println("[NETPET] Gateway already eaten.");
+            return;
+        }
 
-    ethernetScreen.showFood(result, gatewayMAC, levelUp, newLevel);
+        const uint16_t previousLevel = progression.getLevel();
+        const EatResult result = food.eatEthernet(gatewayMAC);
 
-    Serial.print("[NETPET] Ethernet food: +");
-    Serial.print(result.finalXp);
-    Serial.print(" XP, +");
-    Serial.print(result.energyGained);
-    Serial.println(" energy.");
+        if (result.finalXp == 0) return;
+
+        const uint16_t newLevel = progression.getLevel();
+
+        pendingGatewayMAC = gatewayMAC;
+        pendingEthernetResult = result;
+        pendingEthernetLevel = newLevel;
+        pendingEthernetLevelUp = newLevel > previousLevel;
+
+        ethernetFoodPending = true;
+
+        pet.activity();
+
+        Serial.print("[NETPET] Ethernet food ready: +");
+        Serial.print(result.finalXp);
+        Serial.print(" XP, +");
+        Serial.print(result.energyGained);
+        Serial.println(" energy.");
+    }
+
+    if (!ethernetFoodPending) return;
+
+    // Never interrupt the Ethernet connection animation.
+    if (ethernetScreen.isActive()) return;
+
+    Serial.println("[NETPET] Starting Ethernet eating animation.");
+
+    ethernetScreen.startEating(
+        pendingEthernetResult,
+        pendingGatewayMAC,
+        pendingEthernetLevelUp,
+        pendingEthernetLevel
+    );
+
+    ethernetFoodPending = false;
 }
 
 void setup() {

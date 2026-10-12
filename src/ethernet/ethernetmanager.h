@@ -29,6 +29,7 @@ public:
     bool isLinkUp() const;
     bool isConnected() const;
 
+    bool hasLinkUpEvent();
     bool hasNewGateway();
     void clearGatewayEvent();
 
@@ -59,6 +60,7 @@ private:
     bool available = false;
     bool linkUp = false;
     bool connected = false;
+    bool linkUpEvent = false;
     bool gatewayEvent = false;
 
     unsigned long lastLinkCheck = 0;
