@@ -3,14 +3,17 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+
 #include "../animation/animationmanager.h"
 #include "../input/inputmanager.h"
 #include "../pet/petmanager.h"
 #include "../pet/petidle.h"
 #include "../pet/petdata.h"
 #include "../pet/progressionmanager.h"
+
 #include "wifi/wifiscreen.h"
 #include "ble/blescreen.h"
+#include "ethernet/ethernetscreen.h"
 
 enum class ScreenId : uint8_t {
     PET,
@@ -31,7 +34,8 @@ public:
         PetData& petData,
         ProgressionManager& progression,
         WiFiScreen& wifiScreen,
-        BLEScreen& bleScreen
+        BLEScreen& bleScreen,
+        EthernetScreen& ethernetScreen
     );
 
     void begin();
@@ -51,8 +55,10 @@ private:
     AnimationManager& animator;
     PetData& petData;
     ProgressionManager& progression;
+
     WiFiScreen& wifiScreen;
     BLEScreen& bleScreen;
+    EthernetScreen& ethernetScreen;
 
     ScreenId currentScreen = ScreenId::PET;
     uint8_t selectedMenuItem = 0;

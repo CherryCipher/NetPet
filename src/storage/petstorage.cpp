@@ -9,8 +9,10 @@ bool PetStorage::load(PetData& data) {
 
     data.xp = preferences.getULong("xp", 0);
     data.energy = preferences.getUChar("energy", GameConfig::MAX_ENERGY);
+
     data.wifiEaten = preferences.getULong("wifiCount", 0);
     data.bleEaten = preferences.getULong("bleCount", 0);
+    data.ethernetEaten = preferences.getULong("ethCount", 0);
 
     return true;
 }
@@ -20,8 +22,10 @@ void PetStorage::save(const PetData& data) {
 
     preferences.putULong("xp", data.xp);
     preferences.putUChar("energy", data.energy);
+
     preferences.putULong("wifiCount", data.wifiEaten);
     preferences.putULong("bleCount", data.bleEaten);
+    preferences.putULong("ethCount", data.ethernetEaten);
 }
 
 void PetStorage::clear() {

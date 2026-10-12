@@ -18,6 +18,10 @@ namespace GameConfig {
     // Energy gained from food.
     constexpr uint8_t WIFI_ENERGY = 8;
     constexpr uint8_t BLE_ENERGY = 5;
+    constexpr uint8_t ETHERNET_ENERGY = 15;
+
+    // Ethernet has no RSSI, so it uses fixed base XP.
+    constexpr uint32_t ETHERNET_XP = 100;
 
     // Level progression.
     constexpr uint16_t MAX_LEVEL = 100;

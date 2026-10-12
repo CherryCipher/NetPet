@@ -19,7 +19,7 @@ struct EatResult {
 };
 
 /**
- * @brief Manages consumed Wi-Fi and BLE food.
+ * @brief Manages consumed Wi-Fi, BLE and Ethernet food.
  */
 class FoodManager {
 public:
@@ -32,6 +32,9 @@ public:
 
     bool isBLEEaten(const String& address);
     EatResult eatBLE(const String& address, int32_t rssi);
+
+    bool isEthernetEaten(const String& gatewayMAC);
+    EatResult eatEthernet(const String& gatewayMAC);
 
     void clear();
 
@@ -46,4 +49,5 @@ private:
 
     String makeWiFiKey(const String& bssid) const;
     String makeBLEKey(const String& address) const;
+    String makeEthernetKey(const String& gatewayMAC) const;
 };

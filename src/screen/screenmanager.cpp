@@ -10,7 +10,8 @@ ScreenManager::ScreenManager(
     PetData& petData,
     ProgressionManager& progression,
     WiFiScreen& wifiScreen,
-    BLEScreen& bleScreen
+    BLEScreen& bleScreen,
+    EthernetScreen& ethernetScreen
 )
     : display(display),
       input(input),
@@ -20,7 +21,8 @@ ScreenManager::ScreenManager(
       petData(petData),
       progression(progression),
       wifiScreen(wifiScreen),
-      bleScreen(bleScreen) {}
+      bleScreen(bleScreen),
+      ethernetScreen(ethernetScreen) {}
 
 void ScreenManager::begin() {
     currentScreen = ScreenId::PET;
@@ -29,10 +31,14 @@ void ScreenManager::begin() {
 }
 
 void ScreenManager::update() {
-    if (pet.getState() == PetState::DEAD && currentScreen != ScreenId::PET) {
-        currentScreen = ScreenId::PET;
+    ethernetScreen.update();
+
+    if (pet.getState() == PetState::DEAD) {
+        if (currentScreen != ScreenId::PET) currentScreen = ScreenId::PET;
         return;
     }
+
+    if (ethernetScreen.isActive()) return;
 
     switch (currentScreen) {
         case ScreenId::PET: updatePet(); break;
@@ -45,6 +51,18 @@ void ScreenManager::update() {
 
 void ScreenManager::render() {
     display.clearDisplay();
+
+    if (pet.getState() == PetState::DEAD) {
+        animator.draw();
+        display.display();
+        return;
+    }
+
+    if (ethernetScreen.isActive()) {
+        ethernetScreen.draw();
+        display.display();
+        return;
+    }
 
     switch (currentScreen) {
         case ScreenId::PET: drawPet(); break;
@@ -152,7 +170,6 @@ void ScreenManager::drawStatus() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
 
-    // Energy bar
     display.setCursor(0, 0);
     display.print("E");
 
@@ -170,22 +187,18 @@ void ScreenManager::drawStatus() {
     display.print(energy);
     display.print("%");
 
-    // Level
     display.setCursor(0, 8);
     display.print("LV");
     display.print(level);
 
-    // XP
     display.setCursor(30, 8);
     display.print("XP");
     display.print(xp);
 
-    // Uptime multiplier
     display.setCursor(92, 8);
     display.print("x");
     display.print(multiplier, 1);
 
-    // Separate HUD from pet area
     display.drawFastHLine(0, 15, 128, SSD1306_WHITE);
 }
 
@@ -223,7 +236,7 @@ void ScreenManager::drawStats() {
     display.setCursor(0, 12);
     display.print("LV: ");
     display.print(progression.getLevel());
-    display.print("  XP: ");
+    display.print(" XP: ");
     display.print(progression.getXp());
 
     display.setCursor(0, 22);
@@ -245,8 +258,10 @@ void ScreenManager::drawStats() {
     display.print(progression.getUptimeMultiplier(), 2);
 
     display.setCursor(0, 52);
-    display.print("WIFI:");
+    display.print("W:");
     display.print(petData.wifiEaten);
-    display.print(" BLE:");
+    display.print(" B:");
     display.print(petData.bleEaten);
+    display.print(" E:");
+    display.print(petData.ethernetEaten);
 }

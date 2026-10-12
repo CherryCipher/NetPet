@@ -15,4 +15,5 @@ struct PetData {
 
     uint32_t wifiEaten = 0;
     uint32_t bleEaten = 0;
+    uint32_t ethernetEaten = 0;
 };
