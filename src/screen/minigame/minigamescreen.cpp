@@ -139,10 +139,14 @@ void MiniGameScreen::spawnObstacle(uint8_t index) {
 
     obstacle.x = furthestX + random(SPAWN_MIN_DISTANCE, SPAWN_MAX_DISTANCE + 1);
 
+    const int16_t fishCenterY = fishY + (FRAME_MINIGAME_FISH.height / 2);
+    obstacle.y = fishCenterY - (sprite.height / 2);
+
     const int16_t minY = GAME_TOP + 1;
     const int16_t maxY = GAME_BOTTOM - sprite.height;
 
-    obstacle.y = maxY > minY ? random(minY, maxY + 1) : minY;
+    if (obstacle.y < minY) obstacle.y = minY;
+    if (obstacle.y > maxY) obstacle.y = maxY;
 
     obstacle.active = true;
     obstacle.scored = false;
