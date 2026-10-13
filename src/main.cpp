@@ -20,6 +20,7 @@
 #include "screen/ble/blescreen.h"
 #include "screen/ethernet/ethernetscreen.h"
 #include "storage/petstorage.h"
+#include "screen/minigame/minigamescreen.h"
 
 constexpr uint8_t SCREEN_WIDTH = 128;
 constexpr uint8_t SCREEN_HEIGHT = 64;
@@ -57,6 +58,7 @@ FoodManager food(petData, pet, progression, petStorage);
 
 WiFiScreen wifiScreen(display, input, wifi, food, pet, progression, animator);
 BLEScreen bleScreen(display, input, ble, food, pet, progression, animator);
+MiniGameScreen miniGameScreen(display, input, pet, petData, progression, petStorage);
 EthernetScreen ethernetScreen(display, ethernet, animator);
 
 ScreenManager screens(
@@ -69,7 +71,8 @@ ScreenManager screens(
     progression,
     wifiScreen,
     bleScreen,
-    ethernetScreen
+    ethernetScreen,
+    miniGameScreen
 );
 
 bool ethernetFoodPending = false;

@@ -15,12 +15,15 @@
 #include "ble/blescreen.h"
 #include "ethernet/ethernetscreen.h"
 
+#include "minigame/minigamescreen.h"
+
 enum class ScreenId : uint8_t {
     PET,
     MENU,
     STATS,
     WIFI,
-    BLE
+    BLE,
+    MINI_GAME
 };
 
 class ScreenManager {
@@ -35,7 +38,8 @@ public:
         ProgressionManager& progression,
         WiFiScreen& wifiScreen,
         BLEScreen& bleScreen,
-        EthernetScreen& ethernetScreen
+        EthernetScreen& ethernetScreen,
+        MiniGameScreen& miniGameScreen
     );
 
     void begin();
@@ -46,7 +50,7 @@ public:
     ScreenId getCurrentScreen() const;
 
 private:
-    static constexpr uint8_t MENU_ITEM_COUNT = 3;
+    static constexpr uint8_t MENU_ITEM_COUNT = 4;
 
     Adafruit_SSD1306& display;
     InputManager& input;
@@ -55,6 +59,7 @@ private:
     AnimationManager& animator;
     PetData& petData;
     ProgressionManager& progression;
+    MiniGameScreen& miniGameScreen;
 
     WiFiScreen& wifiScreen;
     BLEScreen& bleScreen;
@@ -68,6 +73,7 @@ private:
     void updateStats();
     void updateWiFi();
     void updateBLE();
+    void updateMiniGame();
 
     void drawPet();
     void drawMenu();

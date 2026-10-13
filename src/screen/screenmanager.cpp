@@ -11,7 +11,8 @@ ScreenManager::ScreenManager(
     ProgressionManager& progression,
     WiFiScreen& wifiScreen,
     BLEScreen& bleScreen,
-    EthernetScreen& ethernetScreen
+    EthernetScreen& ethernetScreen,
+    MiniGameScreen& miniGameScreen
 )
     : display(display),
       input(input),
@@ -22,7 +23,8 @@ ScreenManager::ScreenManager(
       progression(progression),
       wifiScreen(wifiScreen),
       bleScreen(bleScreen),
-      ethernetScreen(ethernetScreen) {}
+      ethernetScreen(ethernetScreen),
+      miniGameScreen(miniGameScreen) {}
 
 void ScreenManager::begin() {
     currentScreen = ScreenId::PET;
@@ -46,6 +48,7 @@ void ScreenManager::update() {
         case ScreenId::STATS: updateStats(); break;
         case ScreenId::WIFI: updateWiFi(); break;
         case ScreenId::BLE: updateBLE(); break;
+        case ScreenId::MINI_GAME: updateMiniGame(); break;
     }
 }
 
@@ -70,6 +73,7 @@ void ScreenManager::render() {
         case ScreenId::STATS: drawStats(); break;
         case ScreenId::WIFI: wifiScreen.draw(); break;
         case ScreenId::BLE: bleScreen.draw(); break;
+        case ScreenId::MINI_GAME: miniGameScreen.draw(); break;
     }
 
     display.display();
@@ -90,6 +94,7 @@ void ScreenManager::show(ScreenId screen) {
 
     if (currentScreen == ScreenId::WIFI) wifiScreen.begin();
     if (currentScreen == ScreenId::BLE) bleScreen.begin();
+    if (currentScreen == ScreenId::MINI_GAME) miniGameScreen.begin();
 }
 
 ScreenId ScreenManager::getCurrentScreen() const {
@@ -143,11 +148,16 @@ void ScreenManager::updateBLE() {
     if (bleScreen.update()) show(ScreenId::MENU);
 }
 
+void ScreenManager::updateMiniGame() {
+    if (miniGameScreen.update()) show(ScreenId::PET);
+}
+
 void ScreenManager::selectMenuItem() {
     switch (selectedMenuItem) {
         case 0: show(ScreenId::STATS); break;
         case 1: show(ScreenId::WIFI); break;
         case 2: show(ScreenId::BLE); break;
+        case 3: show(ScreenId::MINI_GAME); break;
     }
 }
 
@@ -232,11 +242,12 @@ void ScreenManager::drawMenu() {
     const char* items[MENU_ITEM_COUNT] = {
         "STATS",
         "SCAN WIFI",
-        "SCAN BLE"
+        "SCAN BLE",
+        "MINI GAME"
     };
 
     for (uint8_t i = 0; i < MENU_ITEM_COUNT; i++) {
-        display.setCursor(0, 20 + i * 12);
+        display.setCursor(0, 16 + i * 11);
         display.print(i == selectedMenuItem ? "> " : "  ");
         display.print(items[i]);
     }
