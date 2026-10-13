@@ -29,9 +29,14 @@ namespace GameConfig {
     constexpr uint32_t LEVEL_XP_GROWTH = 25;
 
     // Uptime multiplier thresholds.
-    constexpr unsigned long UPTIME_1 = 1UL * 60UL * 60UL * 1000UL;
-    constexpr unsigned long UPTIME_3 = 3UL * 60UL * 60UL * 1000UL;
-    constexpr unsigned long UPTIME_6 = 6UL * 60UL * 60UL * 1000UL;
-    constexpr unsigned long UPTIME_12 = 12UL * 60UL * 60UL * 1000UL;
-    constexpr unsigned long UPTIME_24 = 24UL * 60UL * 60UL * 1000UL;
+    constexpr uint64_t UPTIME_30M = 30ULL * 60ULL * 1000ULL;
+    constexpr uint64_t UPTIME_1H = 1ULL * 60ULL * 60ULL * 1000ULL;
+    constexpr uint64_t UPTIME_3H = 3ULL * 60ULL * 60ULL * 1000ULL;
+    constexpr uint64_t UPTIME_6H = 6ULL * 60ULL * 60ULL * 1000ULL;
+    constexpr uint64_t UPTIME_12H = 12ULL * 60ULL * 60ULL * 1000ULL;
+
+    constexpr uint64_t UPTIME_1D = 24ULL * 60ULL * 60ULL * 1000ULL;
+    constexpr uint64_t UPTIME_3D = 3ULL * 24ULL * 60ULL * 60ULL * 1000ULL;
+    constexpr uint64_t UPTIME_1W = 7ULL * 24ULL * 60ULL * 60ULL * 1000ULL;
+    constexpr uint64_t UPTIME_1M = 30ULL * 24ULL * 60ULL * 60ULL * 1000ULL;
 }

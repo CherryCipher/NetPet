@@ -50,7 +50,7 @@ public:
     /**
      * @brief Returns the current session uptime in milliseconds.
      */
-    unsigned long getUptime() const;
+    uint64_t getUptime() const;
 
     /**
      * @brief Returns the current uptime XP multiplier.
@@ -73,5 +73,5 @@ public:
 
 private:
     PetData& data;
-    unsigned long sessionStartedAt = 0;
+    uint64_t sessionStartedAt = 0;
 };

@@ -1,6 +1,8 @@
 #include "progressionmanager.h"
 #include "../config/gameconfig.h"
 
+#include <esp_timer.h>
+
 ProgressionManager::ProgressionManager(PetData& data) : data(data) {}
 
 void ProgressionManager::begin() {
@@ -8,7 +10,7 @@ void ProgressionManager::begin() {
 }
 
 void ProgressionManager::resetSession() {
-    sessionStartedAt = millis();
+    sessionStartedAt = esp_timer_get_time() / 1000ULL;
 }
 
 void ProgressionManager::addXp(uint32_t amount) {
@@ -45,18 +47,23 @@ uint32_t ProgressionManager::getNextLevelXp() const {
     return requiredXp;
 }
 
-unsigned long ProgressionManager::getUptime() const {
-    return millis() - sessionStartedAt;
+
+uint64_t ProgressionManager::getUptime() const {
+    return (esp_timer_get_time() / 1000ULL) - sessionStartedAt;
 }
 
 float ProgressionManager::getUptimeMultiplier() const {
-    const unsigned long uptime = getUptime();
+    const uint64_t uptime = getUptime();
 
-    if (uptime >= GameConfig::UPTIME_24) return 2.0f;
-    if (uptime >= GameConfig::UPTIME_12) return 1.75f;
-    if (uptime >= GameConfig::UPTIME_6) return 1.5f;
-    if (uptime >= GameConfig::UPTIME_3) return 1.25f;
-    if (uptime >= GameConfig::UPTIME_1) return 1.1f;
+    if (uptime >= GameConfig::UPTIME_1M) return 5.0f;
+    if (uptime >= GameConfig::UPTIME_1W) return 3.0f;
+    if (uptime >= GameConfig::UPTIME_3D) return 2.5f;
+    if (uptime >= GameConfig::UPTIME_1D) return 2.25f;
+    if (uptime >= GameConfig::UPTIME_12H) return 2.0f;
+    if (uptime >= GameConfig::UPTIME_6H) return 1.75f;
+    if (uptime >= GameConfig::UPTIME_3H) return 1.5f;
+    if (uptime >= GameConfig::UPTIME_1H) return 1.25f;
+    if (uptime >= GameConfig::UPTIME_30M) return 1.1f;
 
     return 1.0f;
 }
