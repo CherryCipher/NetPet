@@ -130,29 +130,26 @@ void EthernetScreen::drawEatResult() {
     display.setTextSize(1);
 
     display.setCursor(0, 0);
-    display.print("ETHERNET EATEN!");
-
-    display.drawFastHLine(0, 11, 128, SSD1306_WHITE);
-
-    display.setCursor(0, 18);
     display.print(gatewayMAC);
 
-    display.setCursor(0, 32);
-    display.print("+");
+    display.setCursor(18, 12);
+    display.print("==== EATEN ====");
+
+    display.setCursor(0, 28);
+    display.print("ENERGY +");
     display.print(result.energyGained);
-    display.print(" ENERGY");
 
-    display.setCursor(0, 43);
-    display.print("+");
+    display.setCursor(0, 40);
+    display.print("XP +");
     display.print(result.finalXp);
-    display.print(" XP");
-
-    display.setCursor(75, 43);
-    display.print("x");
+    display.print(" (");
+    display.print(result.baseXp);
+    display.print(" * ");
     display.print(result.multiplier, 1);
+    display.print(")");
 
-    display.setCursor(0, 55);
-    display.print("GATEWAY DISCOVERED");
+    display.setCursor(0, 52);
+    display.print("ETHERNET +1");
 }
 
 void EthernetScreen::drawLevelUp() {

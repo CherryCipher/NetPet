@@ -296,25 +296,29 @@ void WiFiScreen::drawEatResult() {
     display.setTextSize(1);
 
     String name = eatenName;
-    if (name.length() > 18) name = name.substring(0, 18);
+    if (name.length() > 20) name = name.substring(0, 17) + "...";
 
-    display.setCursor(0, 8);
+    display.setCursor(0, 0);
     display.print(name);
-    display.print(" EATEN!");
 
-    display.setCursor(0, 30);
-    display.print("+");
+    display.setCursor(18, 12);
+    display.print("==== EATEN ====");
+
+    display.setCursor(0, 28);
+    display.print("ENERGY +");
     display.print(eatResult.energyGained);
-    display.print(" E");
 
-    display.setCursor(64, 30);
-    display.print("+");
+    display.setCursor(0, 40);
+    display.print("XP +");
     display.print(eatResult.finalXp);
-    display.print(" XP");
+    display.print(" (");
+    display.print(eatResult.baseXp);
+    display.print(" * ");
+    display.print(eatResult.multiplier, 1);
+    display.print(")");
 
-    display.setCursor(0, 48);
-    display.print("BONUS x");
-    display.print(eatResult.multiplier, 2);
+    display.setCursor(0, 52);
+    display.print("WIFI +1");
 }
 
 void WiFiScreen::drawLevelUp() {

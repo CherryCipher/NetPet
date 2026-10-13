@@ -164,8 +164,12 @@ void ScreenManager::drawPet() {
 void ScreenManager::drawStatus() {
     const uint8_t energy = petData.energy;
     const uint32_t xp = progression.getXp();
-    const uint8_t level = progression.getLevel();
-    const float multiplier = progression.getUptimeMultiplier();
+    const uint32_t nextLevelXp = progression.getNextLevelXp();
+    const uint16_t level = progression.getLevel();
+
+    const unsigned long uptimeMinutes = progression.getUptime() / 60000UL;
+    const unsigned long hours = uptimeMinutes / 60UL;
+    const unsigned long minutes = uptimeMinutes % 60UL;
 
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
@@ -187,17 +191,33 @@ void ScreenManager::drawStatus() {
     display.print(energy);
     display.print("%");
 
+    display.setCursor(94, 0);
+
+    if (hours < 24) {
+        if (hours < 10) display.print("0");
+        display.print(hours);
+        display.print(":");
+        if (minutes < 10) display.print("0");
+        display.print(minutes);
+    } else {
+        const unsigned long days = hours / 24UL;
+        const unsigned long remainingHours = hours % 24UL;
+
+        display.print(days);
+        display.print("d");
+        display.print(remainingHours);
+        display.print("h");
+    }
+
     display.setCursor(0, 8);
     display.print("LV");
     display.print(level);
 
-    display.setCursor(30, 8);
+    display.setCursor(24, 8);
     display.print("XP");
     display.print(xp);
-
-    display.setCursor(92, 8);
-    display.print("x");
-    display.print(multiplier, 1);
+    display.print("/");
+    display.print(nextLevelXp);
 
     display.drawFastHLine(0, 15, 128, SSD1306_WHITE);
 }
@@ -216,16 +236,19 @@ void ScreenManager::drawMenu() {
     };
 
     for (uint8_t i = 0; i < MENU_ITEM_COUNT; i++) {
-        display.setCursor(0, 24 + i * 12);
+        display.setCursor(0, 20 + i * 12);
         display.print(i == selectedMenuItem ? "> " : "  ");
         display.print(items[i]);
     }
+
+    display.setCursor(92, 56);
+    display.print("* BACK");
 }
 
 void ScreenManager::drawStats() {
-    const unsigned long uptimeSeconds = progression.getUptime() / 1000;
-    const unsigned long hours = uptimeSeconds / 3600;
-    const unsigned long minutes = (uptimeSeconds % 3600) / 60;
+    const unsigned long uptimeMinutes = progression.getUptime() / 60000UL;
+    const unsigned long hours = uptimeMinutes / 60UL;
+    const unsigned long minutes = uptimeMinutes % 60UL;
 
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
@@ -234,10 +257,12 @@ void ScreenManager::drawStats() {
     display.print("NETPET STATS");
 
     display.setCursor(0, 12);
-    display.print("LV: ");
+    display.print("LV");
     display.print(progression.getLevel());
-    display.print(" XP: ");
+    display.print(" XP");
     display.print(progression.getXp());
+    display.print("/");
+    display.print(progression.getNextLevelXp());
 
     display.setCursor(0, 22);
     display.print("ENERGY: ");
@@ -247,11 +272,21 @@ void ScreenManager::drawStats() {
     display.setCursor(0, 32);
     display.print("UPTIME: ");
 
-    if (hours < 10) display.print("0");
-    display.print(hours);
-    display.print(":");
-    if (minutes < 10) display.print("0");
-    display.print(minutes);
+    if (hours < 24) {
+        if (hours < 10) display.print("0");
+        display.print(hours);
+        display.print(":");
+        if (minutes < 10) display.print("0");
+        display.print(minutes);
+    } else {
+        const unsigned long days = hours / 24UL;
+        const unsigned long remainingHours = hours % 24UL;
+
+        display.print(days);
+        display.print("d ");
+        display.print(remainingHours);
+        display.print("h");
+    }
 
     display.setCursor(0, 42);
     display.print("BONUS: x");

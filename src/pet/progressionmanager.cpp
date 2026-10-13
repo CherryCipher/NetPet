@@ -31,6 +31,20 @@ uint16_t ProgressionManager::getLevel() const {
     return GameConfig::MAX_LEVEL;
 }
 
+uint32_t ProgressionManager::getNextLevelXp() const {
+    const uint16_t currentLevel = getLevel();
+
+    if (currentLevel >= GameConfig::MAX_LEVEL) return data.xp;
+
+    uint32_t requiredXp = 0;
+
+    for (uint16_t level = 1; level <= currentLevel; level++) {
+        requiredXp += GameConfig::LEVEL_BASE_XP + ((level - 1) * GameConfig::LEVEL_XP_GROWTH);
+    }
+
+    return requiredXp;
+}
+
 unsigned long ProgressionManager::getUptime() const {
     return millis() - sessionStartedAt;
 }

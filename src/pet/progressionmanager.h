@@ -43,6 +43,11 @@ public:
     uint16_t getLevel() const;
 
     /**
+     * @brief Returns the total XP required to reach the next level.
+     */
+    uint32_t getNextLevelXp() const;
+
+    /**
      * @brief Returns the current session uptime in milliseconds.
      */
     unsigned long getUptime() const;
