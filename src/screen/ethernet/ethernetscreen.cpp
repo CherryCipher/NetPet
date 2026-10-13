@@ -19,8 +19,22 @@ void EthernetScreen::update() {
             if (animator.isFinished()) finishEating();
             break;
 
-        case State::RESULT:
-            if (millis() - startedAt >= DISPLAY_DURATION) finishResult();
+        case State::EAT_RESULT:
+            if (millis() - stateStartedAt >= RESULT_DURATION) {
+                if (levelUpPending) startLevelUp();
+                else finishFlow();
+            }
+            break;
+
+        case State::LEVEL_UP:
+            if (animator.isFinished()) {
+                stateStartedAt = millis();
+                state = State::LEVEL_UP_RESULT;
+            }
+            break;
+
+        case State::LEVEL_UP_RESULT:
+            if (millis() - stateStartedAt >= LEVEL_RESULT_DURATION) finishFlow();
             break;
 
         case State::IDLE:
@@ -35,8 +49,16 @@ void EthernetScreen::draw() {
             animator.draw();
             break;
 
-        case State::RESULT:
-            drawResult();
+        case State::EAT_RESULT:
+            drawEatResult();
+            break;
+
+        case State::LEVEL_UP:
+            drawLevelUp();
+            break;
+
+        case State::LEVEL_UP_RESULT:
+            drawLevelUpResult();
             break;
 
         case State::IDLE:
@@ -56,7 +78,7 @@ void EthernetScreen::startConnecting() {
 void EthernetScreen::startEating(const EatResult& result, const String& gatewayMAC, bool levelUp, uint16_t level) {
     this->result = result;
     this->gatewayMAC = gatewayMAC;
-    this->levelUp = levelUp;
+    this->levelUpPending = levelUp;
     this->level = level;
 
     Serial.println("[ETH SCREEN] Playing eat animation.");
@@ -82,17 +104,28 @@ void EthernetScreen::finishConnecting() {
 void EthernetScreen::finishEating() {
     Serial.println("[ETH SCREEN] Eat animation finished.");
 
-    startedAt = millis();
-    state = State::RESULT;
+    stateStartedAt = millis();
+    state = State::EAT_RESULT;
 }
 
-void EthernetScreen::finishResult() {
-    Serial.println("[ETH SCREEN] Ethernet result finished.");
+void EthernetScreen::startLevelUp() {
+    Serial.print("[ETH SCREEN] Starting level-up sequence: LV ");
+    Serial.println(level);
 
+    animator.play(ANIMATION_LEVEL_UP, true);
+
+    stateStartedAt = millis();
+    state = State::LEVEL_UP;
+}
+
+void EthernetScreen::finishFlow() {
+    levelUpPending = false;
     state = State::IDLE;
+
+    Serial.println("[ETH SCREEN] Ethernet flow finished.");
 }
 
-void EthernetScreen::drawResult() {
+void EthernetScreen::drawEatResult() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
 
@@ -119,11 +152,22 @@ void EthernetScreen::drawResult() {
     display.print(result.multiplier, 1);
 
     display.setCursor(0, 55);
+    display.print("GATEWAY DISCOVERED");
+}
 
-    if (levelUp) {
-        display.print("LEVEL UP! LV ");
-        display.print(level);
-    } else {
-        display.print("GATEWAY DISCOVERED");
-    }
+void EthernetScreen::drawLevelUp() {
+    animator.draw();
+}
+
+void EthernetScreen::drawLevelUpResult() {
+    display.setTextColor(SSD1306_WHITE);
+
+    display.setTextSize(1);
+    display.setCursor(34, 10);
+    display.print("LEVEL UP!");
+
+    display.setTextSize(2);
+    display.setCursor(34, 32);
+    display.print("LV ");
+    display.print(level);
 }
