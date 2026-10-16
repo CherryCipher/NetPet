@@ -5,6 +5,7 @@
 #include "../assets/animations.h"
 #include "../config/gameconfig.h"
 #include "../storage/petstorage.h"
+#include "../time/timesyncmanager.h"
 #include "petdata.h"
 #include "progressionmanager.h"
 
@@ -17,7 +18,13 @@ enum class PetState : uint8_t {
 
 class PetManager {
 public:
-    PetManager(AnimationManager& animator, PetData& data, PetStorage& storage, ProgressionManager& progression);
+    PetManager(
+        AnimationManager& animator,
+        PetData& data,
+        PetStorage& storage,
+        ProgressionManager& progression,
+        TimeSyncManager& timeSync
+    );
 
     void begin();
     void update();
@@ -41,11 +48,11 @@ private:
     PetData& data;
     PetStorage& storage;
     ProgressionManager& progression;
+    TimeSyncManager& timeSync;
 
     PetState state = PetState::IDLE;
 
     unsigned long lastActivity = 0;
-    unsigned long lastEnergyDecay = 0;
 
     bool energyDecayPaused = false;
     bool sleepEnabled = true;

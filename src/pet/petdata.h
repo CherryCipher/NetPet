@@ -4,10 +4,7 @@
 #include "../config/gameconfig.h"
 
 /**
- * @brief Persistent NetPet gameplay data.
- *
- * Values in this structure survive resets and power cycles.
- * Session uptime is intentionally not stored here.
+ * @brief Persistent NetPet gameplay and lifecycle data.
  */
 struct PetData {
     uint32_t xp = 0;
@@ -18,4 +15,8 @@ struct PetData {
     uint32_t ethernetEaten = 0;
 
     uint32_t miniGameHighScore = 0;
+
+    uint64_t birthTime = 0;
+    uint64_t lastSyncTime = 0;
+    uint64_t lastEnergyUpdateTime = 0;
 };

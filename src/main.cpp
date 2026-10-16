@@ -22,6 +22,8 @@
 #include "storage/petstorage.h"
 #include "screen/minigame/minigamescreen.h"
 
+#include "time/timesyncmanager.h"
+
 constexpr uint8_t SCREEN_WIDTH = 128;
 constexpr uint8_t SCREEN_HEIGHT = 64;
 constexpr uint8_t OLED_ADDRESS = 0x3C;
@@ -53,7 +55,9 @@ PetIdle petIdle(display);
 InputManager input(BTN_K1, BTN_K2, BTN_K3, BTN_K4);
 
 ProgressionManager progression(petData);
-PetManager pet(animator, petData, petStorage, progression);
+TimeSyncManager timeSync(ble, petData, petStorage);
+
+PetManager pet(animator, petData, petStorage, progression, timeSync);
 FoodManager food(petData, pet, progression, petStorage);
 
 WiFiScreen wifiScreen(display, input, wifi, food, pet, progression, animator);
@@ -212,6 +216,68 @@ void handleEthernetFood() {
     ethernetFoodPending = false;
 }
 
+void waitForTimeSync() {
+    if (!timeSync.begin()) {
+        Serial.println("[TIME] Time service failed.");
+
+        while (true) {
+            display.clearDisplay();
+            display.setTextColor(SSD1306_WHITE);
+            display.setTextSize(1);
+
+            display.setCursor(18, 22);
+            display.print("BLE TIME ERROR");
+
+            display.display();
+
+            delay(100);
+        }
+    }
+
+    while (!timeSync.isSynced()) {
+        timeSync.update();
+
+        display.clearDisplay();
+        display.setTextColor(SSD1306_WHITE);
+        display.setTextSize(1);
+
+        display.setCursor(17, 5);
+        if (petData.birthTime == 0) display.print("WAKE YOUR NETPET");
+        else display.print("SYNC YOUR NETPET");
+
+        display.setCursor(34, 14);
+        display.print("PAIR CODE");
+
+        display.setTextSize(2);
+        display.setCursor(28, 24);
+        display.print(timeSync.getPairingCode());
+
+        display.setTextSize(1);
+        display.setCursor(43, 47);
+        display.print("netpet.");
+
+        display.setCursor(7, 56);
+        display.print("cherrynuggetgames.nl");
+
+        display.display();
+
+        delay(20);
+    }
+
+    display.clearDisplay();
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(30, 22);
+
+    if (petData.birthTime == timeSync.now()) display.print("IT'S ALIVE!");
+    else display.print("TIME SYNCED");
+
+    display.display();
+
+    delay(1000);
+}
+
 void setup() {
     Serial.begin(115200);
 
@@ -251,8 +317,15 @@ void setup() {
         Serial.println("NetPet save loaded.");
     }
 
+    progression.setTimeSyncManager(timeSync);
+
+    waitForTimeSync();
+
     progression.begin();
     pet.begin();
+
+    // Apply all energy decay since the last known wall-clock update.
+    pet.update();
 
     screens.begin();
 
@@ -278,3 +351,4 @@ void loop() {
     screens.update();
     screens.render();
 }
+

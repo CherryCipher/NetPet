@@ -16,6 +16,10 @@ bool PetStorage::load(PetData& data) {
 
     data.miniGameHighScore = preferences.getULong("gameHigh", 0);
 
+    data.birthTime = preferences.getULong64("birthTime", 0);
+    data.lastSyncTime = preferences.getULong64("lastSync", 0);
+    data.lastEnergyUpdateTime = preferences.getULong64("energyTime", 0);
+
     return true;
 }
 
@@ -30,6 +34,10 @@ void PetStorage::save(const PetData& data) {
     preferences.putULong("ethCount", data.ethernetEaten);
 
     preferences.putULong("gameHigh", data.miniGameHighScore);
+
+    preferences.putULong64("birthTime", data.birthTime);
+    preferences.putULong64("lastSync", data.lastSyncTime);
+    preferences.putULong64("energyTime", data.lastEnergyUpdateTime);
 }
 
 void PetStorage::clear() {

@@ -3,75 +3,32 @@
 #include <Arduino.h>
 #include "petdata.h"
 
+class TimeSyncManager;
+
 /**
- * @brief Handles NetPet XP, levels and session progression.
+ * @brief Handles NetPet XP, levels and lifetime progression.
  */
 class ProgressionManager {
 public:
-    /**
-     * @brief Creates a new ProgressionManager.
-     *
-     * @param data Persistent pet data.
-     */
     explicit ProgressionManager(PetData& data);
 
-    /**
-     * @brief Starts the progression system.
-     */
     void begin();
-
-    /**
-     * @brief Resets the current uptime session.
-     */
+    void setTimeSyncManager(TimeSyncManager& timeSync);
     void resetSession();
 
-    /**
-     * @brief Adds XP to the pet.
-     *
-     * @param amount Amount of XP to add.
-     */
     void addXp(uint32_t amount);
 
-    /**
-     * @brief Returns the current total XP.
-     */
     uint32_t getXp() const;
-
-    /**
-     * @brief Calculates the current level.
-     */
     uint16_t getLevel() const;
-
-    /**
-     * @brief Returns the total XP required to reach the next level.
-     */
     uint32_t getNextLevelXp() const;
 
-    /**
-     * @brief Returns the current session uptime in milliseconds.
-     */
     uint64_t getUptime() const;
-
-    /**
-     * @brief Returns the current uptime XP multiplier.
-     */
     float getUptimeMultiplier() const;
 
-    /**
-     * @brief Calculates base XP from an RSSI value.
-     *
-     * @param rssi Signal strength in dBm.
-     */
     uint32_t calculateRssiXp(int rssi) const;
-
-    /**
-     * @brief Calculates final food XP including the uptime multiplier.
-     *
-     * @param rssi Signal strength in dBm.
-     */
     uint32_t calculateFoodXp(int rssi) const;
 
 private:
     PetData& data;
-    uint64_t sessionStartedAt = 0;
+    TimeSyncManager* timeSync = nullptr;
 };

@@ -9,8 +9,8 @@ namespace GameConfig {
     constexpr uint8_t MAX_ENERGY = 100;
     constexpr uint8_t SICK_ENERGY = 25;
 
-    // Energy decreases by 1 every 15 minutes.
-    constexpr unsigned long ENERGY_DECAY_INTERVAL = 15UL * 60UL * 1000UL;
+    // 100 energy points expire in exactly 24 hours.
+    constexpr uint64_t ENERGY_DECAY_INTERVAL_SECONDS = 864ULL;
 
     // Pet goes to sleep after 5 minutes without activity.
     constexpr unsigned long SLEEP_TIMEOUT = 5UL * 60UL * 1000UL;

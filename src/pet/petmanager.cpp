@@ -1,15 +1,26 @@
 #include "petmanager.h"
 
-PetManager::PetManager(AnimationManager& animator, PetData& data, PetStorage& storage, ProgressionManager& progression)
-    : animator(animator), data(data), storage(storage), progression(progression) {}
+PetManager::PetManager(
+    AnimationManager& animator,
+    PetData& data,
+    PetStorage& storage,
+    ProgressionManager& progression,
+    TimeSyncManager& timeSync
+)
+    : animator(animator),
+      data(data),
+      storage(storage),
+      progression(progression),
+      timeSync(timeSync) {}
 
 void PetManager::begin() {
     lastActivity = millis();
-    lastEnergyDecay = millis();
 
     sleepEnabled = true;
     energyDecayPaused = false;
     state = PetState::IDLE;
+
+    updateEnergy();
 }
 
 void PetManager::update() {
@@ -48,6 +59,8 @@ void PetManager::connect() {
 void PetManager::addEnergy(uint8_t amount) {
     if (state == PetState::DEAD) return;
 
+    updateEnergy();
+
     const uint16_t newEnergy = static_cast<uint16_t>(data.energy) + amount;
     data.energy = newEnergy > GameConfig::MAX_ENERGY ? GameConfig::MAX_ENERGY : newEnergy;
 
@@ -56,6 +69,8 @@ void PetManager::addEnergy(uint8_t amount) {
 
 void PetManager::pauseEnergyDecay() {
     if (energyDecayPaused) return;
+
+    updateEnergy();
     energyDecayPaused = true;
 }
 
@@ -63,7 +78,11 @@ void PetManager::resumeEnergyDecay() {
     if (!energyDecayPaused) return;
 
     energyDecayPaused = false;
-    lastEnergyDecay = millis();
+
+    // Prevent animation time from counting as hunger time.
+    if (timeSync.isSynced()) data.lastEnergyUpdateTime = timeSync.now();
+
+    storage.save(data);
 }
 
 void PetManager::setSleepEnabled(bool enabled) {
@@ -100,19 +119,34 @@ bool PetManager::isSleepEnabled() const {
 }
 
 void PetManager::updateEnergy() {
-    if (energyDecayPaused) return;
+    if (energyDecayPaused || !timeSync.isSynced()) return;
 
-    const unsigned long now = millis();
+    const uint64_t currentTime = timeSync.now();
 
-    if (now - lastEnergyDecay < GameConfig::ENERGY_DECAY_INTERVAL) return;
+    if (data.lastEnergyUpdateTime == 0) {
+        data.lastEnergyUpdateTime = currentTime;
+        storage.save(data);
+        return;
+    }
 
-    const unsigned long intervals = (now - lastEnergyDecay) / GameConfig::ENERGY_DECAY_INTERVAL;
-    lastEnergyDecay += intervals * GameConfig::ENERGY_DECAY_INTERVAL;
+    if (currentTime <= data.lastEnergyUpdateTime) return;
+
+    const uint64_t elapsed = currentTime - data.lastEnergyUpdateTime;
+    const uint64_t intervals = elapsed / GameConfig::ENERGY_DECAY_INTERVAL_SECONDS;
+
+    if (intervals == 0) return;
+
+    data.lastEnergyUpdateTime += intervals * GameConfig::ENERGY_DECAY_INTERVAL_SECONDS;
 
     if (intervals >= data.energy) data.energy = 0;
-    else data.energy -= intervals;
+    else data.energy -= static_cast<uint8_t>(intervals);
 
     storage.save(data);
+
+    Serial.print("[ENERGY] -");
+    Serial.print(static_cast<unsigned long long>(intervals));
+    Serial.print(" | Energy: ");
+    Serial.println(data.energy);
 
     if (data.energy == 0) die();
 }
@@ -133,10 +167,11 @@ void PetManager::resetPet() {
 
     data = PetData();
     storage.save(data);
+
     progression.resetSession();
+    timeSync.reset();
 
     lastActivity = millis();
-    lastEnergyDecay = millis();
 
     energyDecayPaused = false;
     sleepEnabled = true;
