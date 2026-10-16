@@ -24,10 +24,7 @@ void PetManager::begin() {
 }
 
 void PetManager::update() {
-    if (state == PetState::DEAD) {
-        if (animator.isFinished()) resetPet();
-        return;
-    }
+    if (state == PetState::DEAD) return;
 
     updateEnergy();
 
@@ -158,25 +155,6 @@ void PetManager::die() {
     sleepEnabled = false;
 
     setState(PetState::DEAD);
-}
-
-void PetManager::resetPet() {
-    Serial.println("Creating new NetPet.");
-
-    storage.clear();
-
-    data = PetData();
-    storage.save(data);
-
-    progression.resetSession();
-    timeSync.reset();
-
-    lastActivity = millis();
-
-    energyDecayPaused = false;
-    sleepEnabled = true;
-
-    setState(PetState::IDLE);
 }
 
 void PetManager::setState(PetState newState) {

@@ -59,6 +59,5 @@ private:
 
     void updateEnergy();
     void die();
-    void resetPet();
     void setState(PetState newState);
 };

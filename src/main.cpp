@@ -278,6 +278,32 @@ void waitForTimeSync() {
     delay(1000);
 }
 
+void handleDeathReset() {
+    if (pet.getState() != PetState::DEAD) return;
+    if (!animator.isFinished()) return;
+    if (!input.anyPressed()) return;
+
+    Serial.println("[NETPET] Death acknowledged. Creating new NetPet.");
+
+    petStorage.clear();
+
+    petData = PetData();
+    petStorage.save(petData);
+
+    display.clearDisplay();
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(22, 24);
+    display.print("NEW NETPET...");
+
+    display.display();
+
+    delay(1000);
+
+    ESP.restart();
+}
+
 void setup() {
     Serial.begin(115200);
 
@@ -346,9 +372,10 @@ void loop() {
     animator.update();
     pet.update();
 
+    handleDeathReset();
+
     handleEthernetFood();
 
     screens.update();
     screens.render();
 }
-
